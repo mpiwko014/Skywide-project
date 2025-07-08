@@ -4,10 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Link } from 'react-router-dom';
-import { Eye } from 'lucide-react';
+import { Eye, Clock } from 'lucide-react';
 
 interface ContentRequest {
   id: string;
@@ -35,6 +35,8 @@ export default function MyRequests() {
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<string>('user');
   const [error, setError] = useState<string | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<ContentRequest | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -116,6 +118,20 @@ export default function MyRequests() {
     }
   };
 
+  const openDetailView = (request: ContentRequest) => {
+    setSelectedRequest(request);
+    setIsDetailModalOpen(true);
+  };
+
+  const closeDetailView = () => {
+    setSelectedRequest(null);
+    setIsDetailModalOpen(false);
+  };
+
+  const truncateText = (text: string, maxLength: number = 100) => {
+    return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background p-8">
@@ -124,18 +140,35 @@ export default function MyRequests() {
             <h1 className="text-3xl font-bold text-foreground mb-2">My Requests</h1>
             <p className="text-muted-foreground">Loading your submitted content requests...</p>
           </div>
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-6 w-48" />
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-16 w-full" />
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Card key={i}>
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    <div>
+                      <Skeleton className="h-6 w-3/4 mb-2" />
+                      <Skeleton className="h-4 w-1/2" />
+                    </div>
+                    <div className="flex gap-2">
+                      <Skeleton className="h-5 w-16" />
+                      <Skeleton className="h-5 w-20" />
+                    </div>
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-2/3" />
+                      <Skeleton className="h-3 w-24" />
+                    </div>
+                    <div className="pt-2 border-t border-border">
+                      <div className="flex justify-between">
+                        <Skeleton className="h-3 w-20" />
+                        <Skeleton className="h-6 w-6" />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -185,47 +218,138 @@ export default function MyRequests() {
             </CardContent>
           </Card>
         ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>Content Requests</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Article Title</TableHead>
-                    <TableHead>Client Name</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Submitted</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {requests.map((request) => (
-                    <TableRow key={request.id}>
-                      <TableCell className="font-medium">
-                        {request.article_title}
-                      </TableCell>
-                      <TableCell>{request.client_name}</TableCell>
-                      <TableCell>{request.article_type}</TableCell>
-                      <TableCell>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {requests.map((request) => (
+                <Card 
+                  key={request.id} 
+                  className="cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-primary/50 hover:scale-[1.02]"
+                  onClick={() => openDetailView(request)}
+                >
+                  <CardContent className="p-6">
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-lg font-semibold text-foreground mb-2 line-clamp-2">
+                          {request.article_title}
+                        </h3>
+                        <p className="text-muted-foreground text-sm">
+                          {request.client_name}
+                        </p>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge variant="outline" className="text-xs">
+                          {request.article_type}
+                        </Badge>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
                           {request.status.replace('_', ' ')}
                         </span>
-                      </TableCell>
-                      <TableCell>{formatDate(request.created_at)}</TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="sm">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <p className="text-muted-foreground text-sm line-clamp-3">
+                          {truncateText(request.creative_brief)}
+                        </p>
+                        
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          {formatDate(request.created_at)}
+                        </div>
+                      </div>
+                      
+                      <div className="pt-2 border-t border-border">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground">
+                            {request.webhook_sent ? '✓ Processed' : '⏳ Processing'}
+                          </span>
+                          <Button variant="ghost" size="sm" className="h-6 px-2">
+                            <Eye className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Detail Modal */}
+            <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Request Details</DialogTitle>
+                </DialogHeader>
+                
+                {selectedRequest && (
+                  <div className="space-y-6">
+                    <div className="grid gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Article Title</label>
+                        <p className="text-foreground mt-1">{selectedRequest.article_title}</p>
+                      </div>
+                      
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Target Audience</label>
+                        <p className="text-foreground mt-1">{selectedRequest.title_audience}</p>
+                      </div>
+                      
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">SEO Keywords</label>
+                        <p className="text-foreground mt-1">{selectedRequest.seo_keywords}</p>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Client Name</label>
+                          <p className="text-foreground mt-1">{selectedRequest.client_name}</p>
+                        </div>
+                        
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Article Type</label>
+                          <p className="text-foreground mt-1">{selectedRequest.article_type}</p>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Creative Brief</label>
+                        <p className="text-foreground mt-1 whitespace-pre-wrap">{selectedRequest.creative_brief}</p>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Status</label>
+                          <div className="mt-1">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedRequest.status)}`}>
+                              {selectedRequest.status.replace('_', ' ')}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Webhook Status</label>
+                          <p className="text-foreground mt-1">
+                            {selectedRequest.webhook_sent ? '✓ Successfully sent' : '⏳ Pending'}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Submitted</label>
+                          <p className="text-foreground mt-1">{formatDate(selectedRequest.created_at)}</p>
+                        </div>
+                        
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Last Updated</label>
+                          <p className="text-foreground mt-1">{formatDate(selectedRequest.updated_at)}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
+          </>
         )}
       </div>
     </div>
