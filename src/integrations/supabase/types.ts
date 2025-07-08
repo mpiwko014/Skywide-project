@@ -14,23 +14,80 @@ export type Database = {
   }
   public: {
     Tables: {
+      content_requests: {
+        Row: {
+          article_title: string
+          article_type: string
+          client_name: string
+          created_at: string
+          creative_brief: string
+          id: string
+          seo_keywords: string
+          status: string | null
+          title_audience: string
+          updated_at: string
+          user_id: string
+          webhook_response: string | null
+          webhook_sent: boolean | null
+        }
+        Insert: {
+          article_title: string
+          article_type: string
+          client_name: string
+          created_at?: string
+          creative_brief: string
+          id?: string
+          seo_keywords: string
+          status?: string | null
+          title_audience: string
+          updated_at?: string
+          user_id: string
+          webhook_response?: string | null
+          webhook_sent?: boolean | null
+        }
+        Update: {
+          article_title?: string
+          article_type?: string
+          client_name?: string
+          created_at?: string
+          creative_brief?: string
+          id?: string
+          seo_keywords?: string
+          status?: string | null
+          title_audience?: string
+          updated_at?: string
+          user_id?: string
+          webhook_response?: string | null
+          webhook_sent?: boolean | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
           display_name: string | null
+          email: string | null
+          full_name: string | null
           id: string
+          role: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           display_name?: string | null
+          email?: string | null
+          full_name?: string | null
           id: string
+          role?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           display_name?: string | null
+          email?: string | null
+          full_name?: string | null
           id?: string
+          role?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -40,7 +97,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin_user: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
