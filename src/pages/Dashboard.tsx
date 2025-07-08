@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface FormData {
   articleTitle: string;
@@ -68,40 +69,75 @@ export default function Dashboard() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('https://seobrand.app.n8n.cloud/webhook/content-engine', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          articleTitle: formData.articleTitle,
-          titleAudience: formData.titleAudience,
-          seoKeywords: formData.seoKeywords,
-          articleType: formData.articleType,
-          clientName: formData.clientName,
-          creativeBrief: formData.creativeBrief,
-        }),
+      // 1. Save to Supabase database FIRST
+      const { data: dbData, error: dbError } = await supabase
+        .from('content_requests')
+        .insert([{
+          user_id: user?.id,
+          article_title: formData.articleTitle,
+          title_audience: formData.titleAudience,
+          seo_keywords: formData.seoKeywords,
+          article_type: formData.articleType,
+          client_name: formData.clientName,
+          creative_brief: formData.creativeBrief,
+          status: 'pending'
+        }])
+        .select();
+
+      if (dbError) {
+        throw new Error(`Database error: ${dbError.message}`);
+      }
+
+      let webhookSuccess = false;
+      
+      // 2. Send to webhook (existing functionality)
+      try {
+        const response = await fetch('https://seobrand.app.n8n.cloud/webhook/content-engine', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            articleTitle: formData.articleTitle,
+            titleAudience: formData.titleAudience,
+            seoKeywords: formData.seoKeywords,
+            articleType: formData.articleType,
+            clientName: formData.clientName,
+            creativeBrief: formData.creativeBrief,
+          }),
+        });
+
+        webhookSuccess = response.ok;
+      } catch (webhookError) {
+        console.error('Webhook failed:', webhookError);
+        // Continue even if webhook fails - database save is primary
+      }
+
+      // 3. Update database with webhook status
+      if (dbData && dbData[0]) {
+        await supabase
+          .from('content_requests')
+          .update({ webhook_sent: webhookSuccess })
+          .eq('id', dbData[0].id);
+      }
+
+      toast({
+        title: "Success!",
+        description: "Content request submitted successfully.",
+      });
+      
+      // Reset form after successful submission
+      setFormData({
+        articleTitle: '',
+        titleAudience: '',
+        seoKeywords: '',
+        clientName: '',
+        creativeBrief: '',
+        articleType: '',
       });
 
-      if (response.ok) {
-        toast({
-          title: "Success!",
-          description: "Content request submitted successfully.",
-        });
-        
-        // Reset form after successful submission
-        setFormData({
-          articleTitle: '',
-          titleAudience: '',
-          seoKeywords: '',
-          clientName: '',
-          creativeBrief: '',
-          articleType: '',
-        });
-      } else {
-        throw new Error('Failed to submit request');
-      }
     } catch (error) {
+      console.error('Submission error:', error);
       toast({
         title: "Submission Failed",
         description: "There was an error submitting your request. Please try again.",
