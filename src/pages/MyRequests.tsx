@@ -45,14 +45,20 @@ export default function MyRequests() {
 
   useEffect(() => {
     if (user) {
-      fetchRequests();
       checkUserRole();
     }
   }, [user]);
 
+  useEffect(() => {
+    if (user && userRole) {
+      fetchRequests();
+    }
+  }, [user, userRole]);
+
   const fetchRequests = async () => {
     try {
-      const { data, error } = await supabase
+      // First, fetch all content requests
+      const { data: requestsData, error: requestsError } = await supabase
         .from('content_requests')
         .select(`
           id,
@@ -66,17 +72,52 @@ export default function MyRequests() {
           webhook_sent,
           created_at,
           updated_at,
-          user_id,
-          profiles:user_id (
-            full_name,
-            email,
-            role
-          )
+          user_id
         `)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
-      setRequests((data as unknown as ContentRequest[]) || []);
+      if (requestsError) throw requestsError;
+
+      let requestsWithProfiles = requestsData || [];
+
+      // If user is admin, fetch user profiles and merge with requests
+      if (userRole === 'admin' && requestsData && requestsData.length > 0) {
+        try {
+          // Get unique user IDs from requests
+          const userIds = [...new Set(requestsData.map(req => req.user_id))];
+          
+          // Fetch profiles for those users
+          const { data: profilesData, error: profilesError } = await supabase
+            .from('profiles')
+            .select('id, full_name, email, role')
+            .in('id', userIds);
+
+          if (profilesError) {
+            console.error('Error fetching profiles:', profilesError);
+            // Continue without profile data rather than failing completely
+          } else if (profilesData) {
+            // Create a map of user_id to profile for efficient lookup
+            const profilesMap = new Map(
+              profilesData.map(profile => [profile.id, profile])
+            );
+
+            // Merge profile data with requests
+            requestsWithProfiles = requestsData.map(request => ({
+              ...request,
+              profiles: profilesMap.get(request.user_id) ? {
+                full_name: profilesMap.get(request.user_id)!.full_name,
+                email: profilesMap.get(request.user_id)!.email,
+                role: profilesMap.get(request.user_id)!.role
+              } : undefined
+            }));
+          }
+        } catch (profileErr) {
+          console.error('Error fetching user profiles:', profileErr);
+          // Continue with requests data only
+        }
+      }
+
+      setRequests(requestsWithProfiles as ContentRequest[]);
     } catch (err: any) {
       console.error('Error fetching requests:', err);
       setError(err.message);
