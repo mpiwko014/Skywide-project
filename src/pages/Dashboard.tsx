@@ -104,6 +104,7 @@ export default function Dashboard() {
             articleType: formData.articleType,
             clientName: formData.clientName,
             creativeBrief: formData.creativeBrief,
+            requestId: dbData[0].id,
           }),
         });
 
