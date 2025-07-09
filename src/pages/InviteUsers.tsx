@@ -91,101 +91,36 @@ export default function InviteUsers() {
     }
   };
 
-  // Email template function
-  const generateInvitationEmailHTML = (fullName: string, role: string, token: string) => {
-    const registrationUrl = `https://preview--skywide-content-flow.lovable.app/register?token=${token}`;
-    
-    return `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>SKYWIDE Invitation</title>
-        </head>
-        <body style="margin: 0; padding: 0; background-color: #f9fafb; font-family: 'Arial', sans-serif;">
-          <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
-            <!-- Header -->
-            <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 40px 30px; text-align: center;">
-              <h1 style="color: #ffffff; font-size: 28px; font-weight: bold; margin: 0; letter-spacing: 2px;">SKYWIDE</h1>
-              <p style="color: #94a3b8; margin: 8px 0 0 0; font-size: 14px;">Content Dashboard</p>
-            </div>
-            
-            <!-- Content -->
-            <div style="padding: 40px 30px;">
-              <h2 style="color: #1e293b; font-size: 24px; font-weight: bold; margin: 0 0 20px 0;">You're Invited!</h2>
-              
-              <p style="color: #475569; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                Hi ${fullName},
-              </p>
-              
-              <p style="color: #475569; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                You've been invited to join the SKYWIDE Content Dashboard as ${role === 'admin' ? 'an Admin' : 'a User'}. 
-                Our platform helps teams streamline content creation and manage requests efficiently.
-              </p>
-              
-              <p style="color: #475569; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
-                Click the button below to complete your registration and get started:
-              </p>
-              
-              <!-- CTA Button -->
-              <div style="text-align: center; margin: 30px 0;">
-                <a href="${registrationUrl}" 
-                   style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); 
-                          color: #ffffff; 
-                          text-decoration: none; 
-                          padding: 16px 32px; 
-                          border-radius: 8px; 
-                          font-size: 16px; 
-                          font-weight: 600; 
-                          display: inline-block; 
-                          box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);">
-                  Complete Registration
-                </a>
-              </div>
-              
-              <p style="color: #64748b; font-size: 14px; line-height: 1.5; margin: 30px 0 0 0; text-align: center;">
-                This invitation expires in 7 days. If you have any questions, contact us at 
-                <a href="mailto:support@skywide.co" style="color: #06b6d4; text-decoration: none;">support@skywide.co</a>
-              </p>
-              
-              <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
-              
-              <p style="color: #94a3b8; font-size: 12px; text-align: center; margin: 0;">
-                © ${new Date().getFullYear()} SKYWIDE. All rights reserved.
-              </p>
-            </div>
-          </div>
-        </body>
-      </html>
-    `;
-  };
 
-  // Email sending function
+  // Email sending function via n8n webhook
   const sendInvitationEmail = async (email: string, fullName: string, role: string, token: string) => {
     try {
-      const response = await fetch('https://api.resend.com/emails', {
+      const webhookUrl = 'https://seobrand.app.n8n.cloud/webhook/send-invitation';
+      const appUrl = 'https://preview--skywide-content-flow.lovable.app';
+      
+      const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
-          'Authorization': 'Bearer re_h1wrJ7JC_3bfwA1KiXWgbrmpWjznCpSWu',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: 'SKYWIDE <noreply@skywide.co>',
-          to: [email],
-          subject: "You're invited to join SKYWIDE Content Dashboard",
-          html: generateInvitationEmailHTML(fullName, role, token)
+          email,
+          fullName,
+          role,
+          token,
+          appUrl
         })
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to send email');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Webhook failed: ${response.status}`);
       }
 
-      return await response.json();
+      const result = await response.json();
+      return result;
     } catch (error) {
-      console.error('Email sending error:', error);
+      console.error('Email webhook error:', error);
       throw error;
     }
   };
@@ -217,11 +152,15 @@ export default function InviteUsers() {
 
     try {
       // Check for existing user or pending invitation
-      const { data: existingUser } = await supabase
+      const { data: existingUser, error: userError } = await supabase
         .from('profiles')
-        .select('id')
+        .select('id, email')
         .eq('email', formData.email)
-        .single();
+        .maybeSingle();
+
+      if (userError && userError.code !== 'PGRST116') {
+        console.error('Profile query error:', userError);
+      }
 
       if (existingUser) {
         toast({
@@ -233,12 +172,16 @@ export default function InviteUsers() {
         return;
       }
 
-      const { data: pendingInvitation } = await supabase
+      const { data: pendingInvitation, error: invitationError } = await supabase
         .from('user_invitations')
-        .select('id')
+        .select('id, email, status')
         .eq('email', formData.email)
         .eq('status', 'pending')
-        .single();
+        .maybeSingle();
+
+      if (invitationError && invitationError.code !== 'PGRST116') {
+        console.error('Invitation query error:', invitationError);
+      }
 
       if (pendingInvitation) {
         toast({
