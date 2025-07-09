@@ -13,7 +13,7 @@ import { InvitationTable } from '@/components/invitation/InvitationTable';
 
 export default function InviteUsers() {
   const { user } = useAuth();
-  const { userRole, isAdmin } = useUserRole(user?.id);
+  const { userRole, isAdmin, loading: roleLoading } = useUserRole(user?.id);
   const { invitations, loading, fetchInvitations } = useInvitations(user?.id);
   const { toast } = useToast();
   const [submitting, setSubmitting] = useState(false);
@@ -152,6 +152,19 @@ export default function InviteUsers() {
     }
   };
 
+  // Show loading while role is being checked
+  if (roleLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="flex items-center gap-3">
+          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-muted-foreground">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Only check access after loading is complete
   if (!isAdmin) {
     return (
       <div className="flex items-center justify-center h-96">
