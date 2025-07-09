@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Link } from 'react-router-dom';
-import { Eye, Clock } from 'lucide-react';
+import { Eye, Clock, User } from 'lucide-react';
 
 interface ContentRequest {
   id: string;
@@ -22,6 +22,11 @@ interface ContentRequest {
   updated_at: string;
   webhook_sent: boolean | null;
   user_id: string;
+  profiles?: {
+    full_name: string;
+    email: string;
+    role: string;
+  };
 }
 
 interface Profile {
@@ -49,11 +54,29 @@ export default function MyRequests() {
     try {
       const { data, error } = await supabase
         .from('content_requests')
-        .select('*')
+        .select(`
+          id,
+          article_title,
+          title_audience,
+          seo_keywords,
+          client_name,
+          article_type,
+          creative_brief,
+          status,
+          webhook_sent,
+          created_at,
+          updated_at,
+          user_id,
+          profiles:user_id (
+            full_name,
+            email,
+            role
+          )
+        `)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      setRequests(data || []);
+      setRequests((data as unknown as ContentRequest[]) || []);
     } catch (err: any) {
       console.error('Error fetching requests:', err);
       setError(err.message);
@@ -232,6 +255,23 @@ export default function MyRequests() {
                         <h3 className="text-lg font-semibold text-foreground mb-2 line-clamp-2">
                           {request.article_title}
                         </h3>
+                        {userRole === 'admin' && request.profiles && (
+                          <div className="flex items-center gap-2 mb-2">
+                            <User className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm font-medium text-foreground">
+                              {request.profiles.full_name}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {request.profiles.email}
+                            </span>
+                            <Badge 
+                              variant={request.profiles.role === 'admin' ? 'default' : 'secondary'}
+                              className="text-xs"
+                            >
+                              {request.profiles.role}
+                            </Badge>
+                          </div>
+                        )}
                         <p className="text-muted-foreground text-sm">
                           {request.client_name}
                         </p>
@@ -314,6 +354,22 @@ export default function MyRequests() {
                         <label className="text-sm font-medium text-muted-foreground">Creative Brief</label>
                         <p className="text-foreground mt-1 whitespace-pre-wrap">{selectedRequest.creative_brief}</p>
                       </div>
+                      
+                      {userRole === 'admin' && selectedRequest.profiles && (
+                        <div className="border-t border-border pt-4">
+                          <label className="text-sm font-medium text-muted-foreground">Submitted By</label>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-foreground">{selectedRequest.profiles.full_name}</span>
+                            <span className="text-muted-foreground">({selectedRequest.profiles.email})</span>
+                            <Badge 
+                              variant={selectedRequest.profiles.role === 'admin' ? 'default' : 'secondary'}
+                              className="text-xs"
+                            >
+                              {selectedRequest.profiles.role}
+                            </Badge>
+                          </div>
+                        </div>
+                      )}
                       
                       <div className="grid grid-cols-2 gap-4">
                         <div>
