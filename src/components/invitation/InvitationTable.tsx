@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Users } from 'lucide-react';
+import { Users, Shield, User } from 'lucide-react';
 import { Invitation } from '@/types/invitation';
 import { getStatusBadge, getRoleBadge } from './InvitationBadges';
 
@@ -18,15 +18,28 @@ function formatDate(dateString: string) {
 }
 
 export function InvitationTable({ invitations, loading, onResendInvitation }: InvitationTableProps) {
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-brand-amber/20 text-brand-amber';
+      case 'accepted':
+        return 'bg-brand-emerald/20 text-brand-emerald';
+      case 'expired':
+        return 'bg-destructive/20 text-destructive-foreground';
+      default:
+        return 'bg-muted text-muted-foreground';
+    }
+  };
+
   if (loading) {
     return (
-      <div className="bg-gray-900/50 border border-gray-800 rounded-lg overflow-hidden">
-        <div className="p-6 border-b border-gray-800">
-          <h2 className="text-lg font-semibold text-white">Manage Invitations</h2>
-          <p className="text-gray-400 text-sm mt-1">View and manage sent invitations</p>
+      <div className="bg-card border border-border rounded-lg overflow-hidden">
+        <div className="px-6 py-4 border-b border-border">
+          <h2 className="text-lg font-semibold text-card-foreground">Manage Invitations</h2>
+          <p className="text-sm text-muted-foreground mt-1">View and manage sent invitations</p>
         </div>
         <div className="p-6 text-center">
-          <div className="text-gray-400">Loading invitations...</div>
+          <div className="text-muted-foreground">Loading invitations...</div>
         </div>
       </div>
     );
@@ -34,53 +47,111 @@ export function InvitationTable({ invitations, loading, onResendInvitation }: In
 
   if (invitations.length === 0) {
     return (
-      <div className="bg-gray-900/50 border border-gray-800 rounded-lg overflow-hidden">
-        <div className="p-6 border-b border-gray-800">
-          <h2 className="text-lg font-semibold text-white">Manage Invitations</h2>
-          <p className="text-gray-400 text-sm mt-1">View and manage sent invitations</p>
+      <div className="bg-card border border-border rounded-lg overflow-hidden">
+        <div className="px-6 py-4 border-b border-border">
+          <h2 className="text-lg font-semibold text-card-foreground">Manage Invitations</h2>
+          <p className="text-sm text-muted-foreground mt-1">View and manage sent invitations</p>
         </div>
-        <div className="p-6 text-center">
-          <Users className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-white mb-2">No invitations sent yet</h3>
-          <p className="text-gray-400">Start by sending your first invitation above.</p>
+        <div className="text-center py-12 px-6">
+          <Users className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-card-foreground mb-2">No invitations sent yet</h3>
+          <p className="text-sm text-muted-foreground">
+            Send your first invitation using the form above to get started.
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-900/50 border border-gray-800 rounded-lg overflow-hidden">
-      <div className="p-6 border-b border-gray-800">
-        <h2 className="text-lg font-semibold text-white">Manage Invitations</h2>
-        <p className="text-gray-400 text-sm mt-1">View and manage sent invitations</p>
+    <div className="bg-card border border-border rounded-lg overflow-hidden">
+      <div className="px-6 py-4 border-b border-border">
+        <h2 className="text-lg font-semibold text-card-foreground">Manage Invitations</h2>
+        <p className="text-sm text-muted-foreground mt-1">View and manage sent invitations</p>
       </div>
 
-      <div className="overflow-x-auto">
+      {/* Mobile view */}
+      <div className="md:hidden space-y-4 p-6">
+        {invitations.map((invitation) => (
+          <div key={invitation.id} className="bg-muted/30 rounded-lg p-4">
+            <div className="flex justify-between items-start mb-2">
+              <h3 className="font-medium text-card-foreground">{invitation.full_name}</h3>
+              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${getStatusColor(invitation.status)}`}>
+                {invitation.status}
+              </span>
+            </div>
+            <p className="text-sm text-muted-foreground mb-2">{invitation.email}</p>
+            <div className="flex items-center gap-2 mb-3">
+              <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+                invitation.role === 'admin' 
+                  ? 'bg-brand-violet/20 text-brand-violet' 
+                  : 'bg-brand-blue/20 text-brand-blue'
+              }`}>
+                {invitation.role === 'admin' ? <Shield className="w-3 h-3" /> : <User className="w-3 h-3" />}
+                {invitation.role}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-muted-foreground">
+                {formatDate(invitation.created_at)}
+              </span>
+              {(invitation.status === 'pending' || invitation.status === 'expired') && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="px-3 py-1 text-xs"
+                  onClick={() => onResendInvitation(invitation)}
+                >
+                  Resend
+                </Button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gray-800/50">
-            <tr>
-              <th className="text-left p-4 text-gray-300 font-medium">Name</th>
-              <th className="text-left p-4 text-gray-300 font-medium">Email</th>
-              <th className="text-left p-4 text-gray-300 font-medium">Role</th>
-              <th className="text-left p-4 text-gray-300 font-medium">Status</th>
-              <th className="text-left p-4 text-gray-300 font-medium">Invited Date</th>
-              <th className="text-left p-4 text-gray-300 font-medium">Actions</th>
+          <thead>
+            <tr className="bg-muted/50">
+              <th className="text-left px-6 py-4 text-sm font-medium text-muted-foreground">Name</th>
+              <th className="text-left px-6 py-4 text-sm font-medium text-muted-foreground">Email</th>
+              <th className="text-left px-6 py-4 text-sm font-medium text-muted-foreground">Role</th>
+              <th className="text-left px-6 py-4 text-sm font-medium text-muted-foreground">Status</th>
+              <th className="text-left px-6 py-4 text-sm font-medium text-muted-foreground">Invited Date</th>
+              <th className="text-left px-6 py-4 text-sm font-medium text-muted-foreground">Actions</th>
             </tr>
           </thead>
           <tbody>
             {invitations.map((invitation) => (
-              <tr key={invitation.id} className="border-t border-gray-800 hover:bg-gray-800/30">
-                <td className="p-4 text-white font-medium">{invitation.full_name}</td>
-                <td className="p-4 text-gray-300">{invitation.email}</td>
-                <td className="p-4">{getRoleBadge(invitation.role)}</td>
-                <td className="p-4">{getStatusBadge(invitation.status)}</td>
-                <td className="p-4 text-gray-400">{formatDate(invitation.created_at)}</td>
-                <td className="p-4">
+              <tr key={invitation.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
+                <td className="px-6 py-4 text-sm text-card-foreground font-medium">{invitation.full_name}</td>
+                <td className="px-6 py-4 text-sm text-muted-foreground">{invitation.email}</td>
+                <td className="px-6 py-4">
+                  <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+                    invitation.role === 'admin' 
+                      ? 'bg-brand-violet/20 text-brand-violet' 
+                      : 'bg-brand-blue/20 text-brand-blue'
+                  }`}>
+                    {invitation.role === 'admin' ? <Shield className="w-3 h-3" /> : <User className="w-3 h-3" />}
+                    {invitation.role}
+                  </span>
+                </td>
+                <td className="px-6 py-4">
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${getStatusColor(invitation.status)}`}>
+                    {invitation.status}
+                  </span>
+                </td>
+                <td className="px-6 py-4 text-sm text-muted-foreground">
+                  {formatDate(invitation.created_at)}
+                </td>
+                <td className="px-6 py-4">
                   {(invitation.status === 'pending' || invitation.status === 'expired') && (
                     <Button
                       size="sm"
                       variant="outline"
-                      className="text-blue-400 border-blue-400 hover:bg-blue-400 hover:text-white"
+                      className="px-3 py-1.5 text-xs hover:bg-accent transition-colors"
                       onClick={() => onResendInvitation(invitation)}
                     >
                       Resend

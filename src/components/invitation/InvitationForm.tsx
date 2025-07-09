@@ -30,13 +30,13 @@ export function InvitationForm({ onSubmit, isSubmitting }: InvitationFormProps) 
   };
 
   return (
-    <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
-      <h2 className="text-lg font-semibold text-white mb-4">Send New Invitation</h2>
+    <div className="bg-card border border-border rounded-lg p-6 mb-8">
+      <h2 className="text-lg font-semibold text-foreground mb-6">Send New Invitation</h2>
       
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <Label htmlFor="fullName" className="text-gray-300 mb-2 block">
+            <Label htmlFor="fullName" className="block text-sm font-medium text-foreground mb-2">
               Full Name *
             </Label>
             <Input
@@ -45,13 +45,13 @@ export function InvitationForm({ onSubmit, isSubmitting }: InvitationFormProps) 
               placeholder="Enter full name"
               value={formData.fullName}
               onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
-              className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-blue-500"
+              className="w-full px-4 py-3 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-brand-cyan focus:border-transparent"
               required
             />
           </div>
 
           <div>
-            <Label htmlFor="email" className="text-gray-300 mb-2 block">
+            <Label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
               Email Address *
             </Label>
             <Input
@@ -60,35 +60,46 @@ export function InvitationForm({ onSubmit, isSubmitting }: InvitationFormProps) 
               placeholder="Enter email address"
               value={formData.email}
               onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-              className="bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-blue-500"
+              className="w-full px-4 py-3 bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-brand-cyan focus:border-transparent"
               required
             />
           </div>
         </div>
 
         <div>
-          <Label className="text-gray-300 mb-2 block">
+          <Label className="block text-sm font-medium text-foreground mb-2">
             Role *
           </Label>
           <Select value={formData.role} onValueChange={(value) => setFormData(prev => ({ ...prev, role: value }))}>
-            <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+            <SelectTrigger className="w-full px-4 py-3 bg-input border-border text-foreground">
               <SelectValue placeholder="Select role" />
             </SelectTrigger>
-            <SelectContent className="bg-gray-800 border-gray-700 z-50">
-              <SelectItem value="user" className="text-white hover:bg-gray-700">User</SelectItem>
-              <SelectItem value="admin" className="text-white hover:bg-gray-700">Admin</SelectItem>
+            <SelectContent className="bg-popover border-border z-50">
+              <SelectItem value="user" className="text-popover-foreground hover:bg-accent">User</SelectItem>
+              <SelectItem value="admin" className="text-popover-foreground hover:bg-accent">Admin</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50"
-        >
-          <Mail className="h-4 w-4 mr-2" />
-          {isSubmitting ? 'Sending...' : 'Send Invitation'}
-        </Button>
+        <div className="flex justify-start">
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="px-6 py-3 bg-brand-cyan hover:bg-brand-cyan/80 disabled:opacity-50 disabled:cursor-not-allowed text-primary-foreground font-medium transition-colors duration-200 flex items-center gap-2"
+          >
+            {isSubmitting ? (
+              <>
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                Sending...
+              </>
+            ) : (
+              <>
+                <Mail className="h-4 w-4" />
+                Send Invitation
+              </>
+            )}
+          </Button>
+        </div>
       </form>
     </div>
   );

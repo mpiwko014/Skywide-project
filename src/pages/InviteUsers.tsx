@@ -164,18 +164,18 @@ export default function InviteUsers() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="p-8 space-y-8">
       {/* Header */}
-      <div className="border-b border-gray-800 pb-6">
+      <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
-          <Users className="h-6 w-6 text-blue-400" />
+          <Users className="h-6 w-6 text-brand-cyan" />
           <h1 className="text-2xl font-bold text-white">Invite Users</h1>
-          <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-blue-900/20 text-blue-400">
+          <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-brand-violet/20 text-brand-violet">
             <Shield className="h-3 w-3 mr-1" />
             Admin
           </span>
         </div>
-        <p className="text-gray-400 mb-4">Send invitations to new team members</p>
+        <p className="text-muted-foreground mb-4">Send invitations to new team members</p>
         
         <InvitationStats invitations={invitations} />
       </div>
