@@ -8,7 +8,6 @@ import { useState, useEffect } from 'react';
 const navItems = [
   { icon: Home, label: 'Dashboard', path: '/dashboard' },
   { icon: FileText, label: 'My Requests', path: '/my-requests' },
-  { icon: BarChart, label: 'Analytics', path: '/analytics' },
   { icon: Settings, label: 'Settings', path: '/settings' },
 ];
 

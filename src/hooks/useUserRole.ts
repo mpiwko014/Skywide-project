@@ -1,43 +1,43 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 
 export function useUserRole(userId?: string) {
   const [userRole, setUserRole] = useState<string>('user');
   const [isAdmin, setIsAdmin] = useState(false);
-  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const checkUserRole = async () => {
-      if (!userId) return;
-
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching user role:', error);
+      if (!userId) {
+        setLoading(false);
         return;
       }
 
-      const role = profile?.role || 'user';
-      setUserRole(role);
-      setIsAdmin(role === 'admin');
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', userId)
+          .single();
 
-      if (role !== 'admin') {
-        toast({
-          title: "Access Denied",
-          description: "You don't have permission to access this page.",
-          variant: "destructive",
-        });
-        window.history.back();
+        if (error) {
+          console.error('Error fetching user role:', error);
+          setLoading(false);
+          return;
+        }
+
+        const role = profile?.role || 'user';
+        setUserRole(role);
+        setIsAdmin(role === 'admin');
+      } catch (error) {
+        console.error('Error in checkUserRole:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
     checkUserRole();
-  }, [userId, toast]);
+  }, [userId]);
 
-  return { userRole, isAdmin };
+  return { userRole, isAdmin, loading };
 }

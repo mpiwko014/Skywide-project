@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import { BarChart, Users, CheckCircle, Activity, TrendingUp, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -17,22 +18,28 @@ interface AnalyticsData {
 
 export default function Analytics() {
   const { user } = useAuth();
-  const { isAdmin } = useUserRole(user?.id);
+  const { isAdmin, loading: roleLoading } = useUserRole(user?.id);
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Redirect non-admins
+  // Handle access control
   useEffect(() => {
-    if (user && !isAdmin) {
+    if (!roleLoading && user && !isAdmin) {
+      toast({
+        title: "Access Denied",
+        description: "You don't have permission to access this page.",
+        variant: "destructive",
+      });
       navigate('/dashboard');
     }
-  }, [user, isAdmin, navigate]);
+  }, [user, isAdmin, roleLoading, navigate, toast]);
 
   // Fetch analytics data
   useEffect(() => {
     const fetchAnalytics = async () => {
-      if (!user || !isAdmin) return;
+      if (!user || !isAdmin || roleLoading) return;
 
       try {
         setLoading(true);
@@ -93,8 +100,18 @@ export default function Analytics() {
     };
 
     fetchAnalytics();
-  }, [user, isAdmin]);
+  }, [user, isAdmin, roleLoading]);
 
+  // Show loading while checking role
+  if (roleLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // Don't render anything for non-admins (they'll be redirected)
   if (!user || !isAdmin) {
     return null;
   }
