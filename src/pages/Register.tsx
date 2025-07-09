@@ -8,6 +8,7 @@ import { RegistrationForm } from '@/components/registration/RegistrationForm';
 import { AlertCircle, CheckCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent } from '@/components/ui/card';
+import { Logo } from '@/components/Logo';
 
 interface RegistrationFormData {
   password: string;
@@ -161,6 +162,14 @@ export default function Register() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-4">
+            <Logo size="large" />
+          </div>
+          <h2 className="text-xl text-foreground mb-2">Complete Your Registration</h2>
+          <p className="text-muted-foreground">Welcome to SKYWIDE Content Dashboard</p>
+        </div>
+        
         <RegistrationForm
           invitation={invitation}
           onSubmit={handleRegistration}

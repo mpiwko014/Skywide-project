@@ -3,6 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Button } from '@/components/ui/button';
+import { Logo } from '@/components/Logo';
 
 const navItems = [
   { icon: Home, label: 'Dashboard', path: '/dashboard' },
@@ -33,8 +34,7 @@ export function Sidebar() {
       <div className="fixed left-0 top-0 h-full w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
         {/* Header */}
         <div className="p-6 border-b border-sidebar-border">
-          <h2 className="text-xl font-bold text-sidebar-foreground">SKYWIDE</h2>
-          <p className="text-sm text-sidebar-foreground/70">Content Dashboard</p>
+          <Logo />
         </div>
 
         {/* Loading Navigation */}
@@ -69,8 +69,7 @@ export function Sidebar() {
     <div className="fixed left-0 top-0 h-full w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
       {/* Header */}
       <div className="p-6 border-b border-sidebar-border">
-        <h2 className="text-xl font-bold text-sidebar-foreground">SKYWIDE</h2>
-        <p className="text-sm text-sidebar-foreground/70">Content Dashboard</p>
+        <Logo />
       </div>
 
       {/* Navigation */}

@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { Eye, EyeOff, LogIn, UserPlus } from 'lucide-react';
+import { Logo } from '@/components/Logo';
 
 export default function Login() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -57,10 +58,10 @@ export default function Login() {
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-brand-cyan to-brand-blue bg-clip-text text-transparent">
-            SKYWIDE
-          </h1>
-          <p className="text-muted-foreground mt-2">Content Request Dashboard</p>
+          <div className="flex justify-center mb-4">
+            <Logo size="large" />
+          </div>
+          <p className="text-muted-foreground">Content Request Dashboard</p>
         </div>
 
         <Card className="hover-glow animate-fade-in">

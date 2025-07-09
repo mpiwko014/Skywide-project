@@ -18,7 +18,13 @@ export async function sendInvitationEmail(
         fullName,
         role,
         token,
-        appUrl
+        appUrl,
+        branding: {
+          companyName: 'SKYWIDE',
+          subtitle: 'POWERED BY SEOBRAND AI',
+          primaryColor: '#06b6d4', // brand-cyan
+          backgroundColor: '#1a1a1a'
+        }
       })
     });
 
