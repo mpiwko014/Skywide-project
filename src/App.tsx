@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import MyRequests from "./pages/MyRequests";
+import InviteUsers from "./pages/InviteUsers";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -42,6 +43,16 @@ const App = () => (
                 <ProtectedRoute>
                   <Layout>
                     <MyRequests />
+                  </Layout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/invite-users" 
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <InviteUsers />
                   </Layout>
                 </ProtectedRoute>
               } 

@@ -1,7 +1,9 @@
-import { Home, FileText, BarChart, Settings, LogOut } from 'lucide-react';
+import { Home, FileText, BarChart, Settings, LogOut, Users } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect } from 'react';
 
 const navItems = [
   { icon: Home, label: 'Dashboard', path: '/dashboard' },
@@ -10,13 +12,42 @@ const navItems = [
   { icon: Settings, label: 'Settings', path: '/settings' },
 ];
 
+const adminNavItems = [
+  { icon: Home, label: 'Dashboard', path: '/dashboard' },
+  { icon: FileText, label: 'My Requests', path: '/my-requests' },
+  { icon: Users, label: 'Invite Users', path: '/invite-users' },
+  { icon: BarChart, label: 'Analytics', path: '/analytics' },
+  { icon: Settings, label: 'Settings', path: '/settings' },
+];
+
 export function Sidebar() {
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const location = useLocation();
+  const [userRole, setUserRole] = useState<string>('user');
 
   const isActive = (path: string) => {
     return location.pathname === path || (path === '/dashboard' && location.pathname === '/');
   };
+
+  // Check user role
+  useEffect(() => {
+    const checkUserRole = async () => {
+      if (!user?.id) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      setUserRole(profile?.role || 'user');
+    };
+
+    checkUserRole();
+  }, [user?.id]);
+
+  // Use admin nav items if user is admin, otherwise regular nav items
+  const currentNavItems = userRole === 'admin' ? adminNavItems : navItems;
 
   return (
     <div className="fixed left-0 top-0 h-full w-64 bg-sidebar border-r border-sidebar-border flex flex-col">
@@ -29,7 +60,7 @@ export function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 p-4">
         <ul className="space-y-2">
-          {navItems.map((item) => {
+          {currentNavItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path);
             
