@@ -111,29 +111,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    // Immediately clear local state to provide instant UI feedback
+    setSession(null);
+    setUser(null);
+
     try {
-      await supabase.auth.signOut({ scope: 'local' });
+      // Check if we have a valid session before attempting logout
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        // Attempt server-side logout with local scope
+        await supabase.auth.signOut({ scope: 'local' });
+      }
+      
+      // Clear any remaining auth data from localStorage as fallback
+      localStorage.removeItem('supabase.auth.token');
+      localStorage.removeItem('sb-sgwocrvftiwxofvykmhh-auth-token');
+      
       toast({
         title: "Signed Out",
         description: "You have been successfully signed out.",
       });
     } catch (error: any) {
-      // Handle 403 errors (session not found) as successful logout
-      if (error?.status === 403 || error?.message?.includes('session_not_found')) {
-        // Clear local session state even if server-side logout fails
-        setSession(null);
-        setUser(null);
-        toast({
-          title: "Signed Out",
-          description: "You have been successfully signed out.",
+      // Treat any logout error as successful since we've already cleared local state
+      // This handles 403 session_not_found and other server-side issues gracefully
+      
+      // Ensure complete cleanup of auth data
+      try {
+        localStorage.removeItem('supabase.auth.token');
+        localStorage.removeItem('sb-sgwocrvftiwxofvykmhh-auth-token');
+        // Clear all possible Supabase auth keys
+        Object.keys(localStorage).forEach(key => {
+          if (key.includes('supabase') || key.includes('sb-')) {
+            localStorage.removeItem(key);
+          }
         });
-      } else {
-        toast({
-          title: "Sign Out Error",
-          description: "An error occurred while signing out.",
-          variant: "destructive",
-        });
+      } catch (cleanupError) {
+        console.warn('Cleanup error:', cleanupError);
       }
+
+      toast({
+        title: "Signed Out",
+        description: "You have been successfully signed out.",
+      });
     }
   };
 
