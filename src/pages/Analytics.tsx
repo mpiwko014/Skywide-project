@@ -4,12 +4,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { BarChart, Users, CheckCircle, Activity, TrendingUp, AlertCircle, Calendar } from 'lucide-react';
+import { BarChart, Users, CheckCircle, Activity, TrendingUp, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, LineChart, Line } from 'recharts';
 
 interface AnalyticsData {
   totalRequests: number;
@@ -20,26 +16,12 @@ interface AnalyticsData {
   webhookSuccessRate: number;
 }
 
-interface UserSubmissionData {
-  user_name: string;
-  submission_count: number;
-  last_submission: string;
-}
-
-interface DailySubmissionData {
-  date: string;
-  count: number;
-}
-
 export default function Analytics() {
   const { user } = useAuth();
   const { isAdmin, loading: roleLoading } = useUserRole(user?.id);
   const navigate = useNavigate();
   const { toast } = useToast();
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
-  const [userSubmissions, setUserSubmissions] = useState<UserSubmissionData[]>([]);
-  const [dailySubmissions, setDailySubmissions] = useState<DailySubmissionData[]>([]);
-  const [timeFilter, setTimeFilter] = useState<string>('30');
   const [loading, setLoading] = useState(true);
 
   // Handle access control
@@ -62,39 +44,12 @@ export default function Analytics() {
       try {
         setLoading(true);
 
-        // Calculate date filter
-        const filterDays = parseInt(timeFilter);
-        const filterDate = new Date();
-        filterDate.setDate(filterDate.getDate() - filterDays);
-
-        // Get all content requests with user data
+        // Get all content requests
         const { data: allRequests, error } = await supabase
           .from('content_requests')
-          .select(`
-            *,
-            profiles!content_requests_user_id_fkey (
-              display_name,
-              full_name,
-              email
-            )
-          `);
+          .select('*');
 
         if (error) throw error;
-
-        // Get submissions by user
-        const { data: userSubmissionData, error: userError } = await supabase
-          .from('content_requests')
-          .select(`
-            user_id,
-            created_at,
-            profiles!content_requests_user_id_fkey (
-              display_name,
-              full_name
-            )
-          `)
-          .gte('created_at', filterDate.toISOString());
-
-        if (userError) throw userError;
 
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -137,70 +92,15 @@ export default function Analytics() {
           statusDistribution,
           webhookSuccessRate: systemHealth
         });
-
-        // Process user submissions data
-        const userSubmissionMap = new Map<string, { count: number; lastSubmission: string; userName: string }>();
-        
-        userSubmissionData?.forEach(submission => {
-          const profile = submission.profiles as any;
-          const userName = profile?.display_name || profile?.full_name || 'Unknown User';
-          const userId = submission.user_id;
-          
-          if (!userSubmissionMap.has(userId)) {
-            userSubmissionMap.set(userId, {
-              count: 0,
-              lastSubmission: submission.created_at,
-              userName
-            });
-          }
-          
-          const entry = userSubmissionMap.get(userId)!;
-          entry.count++;
-          if (new Date(submission.created_at) > new Date(entry.lastSubmission)) {
-            entry.lastSubmission = submission.created_at;
-          }
-        });
-
-        const userSubmissionsArray = Array.from(userSubmissionMap.values())
-          .map(entry => ({
-            user_name: entry.userName,
-            submission_count: entry.count,
-            last_submission: entry.lastSubmission
-          }))
-          .sort((a, b) => b.submission_count - a.submission_count);
-
-        setUserSubmissions(userSubmissionsArray);
-
-        // Process daily submissions data
-        const dailyMap = new Map<string, number>();
-        const filteredRequests = allRequests?.filter(req => 
-          new Date(req.created_at) >= filterDate
-        ) || [];
-
-        filteredRequests.forEach(req => {
-          const date = new Date(req.created_at).toISOString().split('T')[0];
-          dailyMap.set(date, (dailyMap.get(date) || 0) + 1);
-        });
-
-        const dailySubmissionsArray = Array.from(dailyMap.entries())
-          .map(([date, count]) => ({ date, count }))
-          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-        setDailySubmissions(dailySubmissionsArray);
       } catch (error) {
         console.error('Error fetching analytics:', error);
-        toast({
-          title: "Error loading analytics",
-          description: "Please try refreshing the page or contact support.",
-          variant: "destructive",
-        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchAnalytics();
-  }, [user, isAdmin, roleLoading, timeFilter]);
+  }, [user, isAdmin, roleLoading]);
 
   // Show loading while checking role
   if (roleLoading) {
@@ -250,25 +150,6 @@ export default function Analytics() {
         </div>
       ) : analyticsData ? (
         <>
-          {/* Time Filter */}
-          <div className="flex items-center gap-4 mb-6">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm font-medium text-foreground">Time Period:</span>
-            </div>
-            <Select value={timeFilter} onValueChange={setTimeFilter}>
-              <SelectTrigger className="w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7">Last 7 days</SelectItem>
-                <SelectItem value="30">Last 30 days</SelectItem>
-                <SelectItem value="90">Last 3 months</SelectItem>
-                <SelectItem value="365">Last year</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
           {/* 4 KPI Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Total Requests Card */}
@@ -352,149 +233,6 @@ export default function Analytics() {
                 <p className="text-xs text-muted-foreground">
                   Webhook delivery success rate
                 </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Submission Form Usage Analytics */}
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-foreground">Submission Form Usage</h2>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Submissions by User Bar Chart */}
-              <Card className="bg-card border-border">
-                <CardHeader>
-                  <CardTitle className="text-lg font-semibold text-foreground">Top Submitters</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {userSubmissions.length > 0 ? (
-                    <ChartContainer
-                      config={{
-                        submissions: {
-                          label: "Submissions",
-                          color: "hsl(var(--brand-cyan))",
-                        },
-                      }}
-                      className="h-[300px]"
-                    >
-                      <ResponsiveContainer width="100%" height="100%">
-                        <RechartsBarChart
-                          data={userSubmissions.slice(0, 10)}
-                          layout="horizontal"
-                          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                        >
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis type="number" />
-                          <YAxis 
-                            dataKey="user_name" 
-                            type="category"
-                            width={120}
-                            tick={{ fontSize: 12 }}
-                          />
-                          <ChartTooltip content={<ChartTooltipContent />} />
-                          <Bar 
-                            dataKey="submission_count" 
-                            fill="hsl(var(--brand-cyan))" 
-                            radius={[0, 4, 4, 0]}
-                          />
-                        </RechartsBarChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
-                  ) : (
-                    <div className="h-[300px] flex items-center justify-center">
-                      <p className="text-muted-foreground">No submission data available</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Daily Submissions Line Chart */}
-              <Card className="bg-card border-border">
-                <CardHeader>
-                  <CardTitle className="text-lg font-semibold text-foreground">Submissions Over Time</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {dailySubmissions.length > 0 ? (
-                    <ChartContainer
-                      config={{
-                        count: {
-                          label: "Daily Submissions",
-                          color: "hsl(var(--brand-blue))",
-                        },
-                      }}
-                      className="h-[300px]"
-                    >
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart
-                          data={dailySubmissions}
-                          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                        >
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis 
-                            dataKey="date" 
-                            tick={{ fontSize: 12 }}
-                            tickFormatter={(value) => new Date(value).toLocaleDateString()}
-                          />
-                          <YAxis />
-                          <ChartTooltip 
-                            content={<ChartTooltipContent />}
-                            labelFormatter={(value) => new Date(value).toLocaleDateString()}
-                          />
-                          <Line 
-                            type="monotone" 
-                            dataKey="count" 
-                            stroke="hsl(var(--brand-blue))" 
-                            strokeWidth={2}
-                            dot={{ fill: "hsl(var(--brand-blue))", strokeWidth: 2, r: 4 }}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </ChartContainer>
-                  ) : (
-                    <div className="h-[300px] flex items-center justify-center">
-                      <p className="text-muted-foreground">No timeline data available</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* User Activity Table */}
-            <Card className="bg-card border-border">
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold text-foreground">User Activity Details</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {userSubmissions.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>User</TableHead>
-                        <TableHead className="text-right">Submissions</TableHead>
-                        <TableHead className="text-right">Last Activity</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {userSubmissions.map((user, index) => (
-                        <TableRow key={index}>
-                          <TableCell className="font-medium">{user.user_name}</TableCell>
-                          <TableCell className="text-right">
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-brand-cyan/20 text-brand-cyan">
-                              {user.submission_count}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-right text-sm text-muted-foreground">
-                            {new Date(user.last_submission).toLocaleDateString()}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">No user activity data available</p>
-                  </div>
-                )}
               </CardContent>
             </Card>
           </div>
