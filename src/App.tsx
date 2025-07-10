@@ -84,7 +84,9 @@ const App = () => (
               path="/features" 
               element={
                 <ProtectedRoute>
-                  <Features />
+                  <Layout>
+                    <Features />
+                  </Layout>
                 </ProtectedRoute>
               } 
             />

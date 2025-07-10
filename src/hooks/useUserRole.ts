@@ -1,16 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export function useUserRole(userId?: string) {
   const [userRole, setUserRole] = useState<string>('user');
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const initialLoadRef = useRef(true);
 
   useEffect(() => {
     const checkUserRole = async () => {
       if (!userId) {
         setLoading(false);
+        initialLoadRef.current = false;
         return;
+      }
+
+      // Only show loading state on initial load, not during navigation
+      if (!initialLoadRef.current) {
+        setLoading(false);
       }
 
       try {
@@ -23,6 +30,7 @@ export function useUserRole(userId?: string) {
         if (error) {
           console.error('Error fetching user role:', error);
           setLoading(false);
+          initialLoadRef.current = false;
           return;
         }
 
@@ -33,6 +41,7 @@ export function useUserRole(userId?: string) {
         console.error('Error in checkUserRole:', error);
       } finally {
         setLoading(false);
+        initialLoadRef.current = false;
       }
     };
 

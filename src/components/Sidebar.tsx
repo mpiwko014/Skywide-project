@@ -1,7 +1,6 @@
 import { Home, FileText, BarChart, Settings, LogOut, Users, MessageSquare } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { useUserRole } from '@/hooks/useUserRole';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/Logo';
 
@@ -21,9 +20,13 @@ const adminNavItems = [
   { icon: Settings, label: 'Settings', path: '/settings' },
 ];
 
-export function Sidebar() {
-  const { signOut, user } = useAuth();
-  const { userRole, loading } = useUserRole(user?.id);
+interface SidebarProps {
+  userRole: string;
+  loading: boolean;
+}
+
+export function Sidebar({ userRole, loading }: SidebarProps) {
+  const { signOut } = useAuth();
   const location = useLocation();
 
   const isActive = (path: string) => {
