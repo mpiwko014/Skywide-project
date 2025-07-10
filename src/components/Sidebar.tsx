@@ -1,4 +1,4 @@
-import { Home, FileText, BarChart, Settings, LogOut, Users } from 'lucide-react';
+import { Home, FileText, BarChart, Settings, LogOut, Users, MessageSquare } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -8,12 +8,14 @@ import { Logo } from '@/components/Logo';
 const navItems = [
   { icon: Home, label: 'Dashboard', path: '/dashboard' },
   { icon: FileText, label: 'My Requests', path: '/my-requests' },
+  { icon: MessageSquare, label: 'Features', path: '/features' },
   { icon: Settings, label: 'Settings', path: '/settings' },
 ];
 
 const adminNavItems = [
   { icon: Home, label: 'Dashboard', path: '/dashboard' },
   { icon: FileText, label: 'My Requests', path: '/my-requests' },
+  { icon: MessageSquare, label: 'Features', path: '/features' },
   { icon: Users, label: 'Invite Users', path: '/invite-users' },
   { icon: BarChart, label: 'Analytics', path: '/analytics' },
   { icon: Settings, label: 'Settings', path: '/settings' },
@@ -105,7 +107,7 @@ export function Sidebar() {
         <img 
           src="/lovable-uploads/6c11bbb9-a412-4b9f-8bf5-4872a550e58e.png" 
           alt="SEObrand" 
-          className="h-8 opacity-60 hover:opacity-80 transition-opacity"
+          className="h-12 opacity-60 hover:opacity-80 transition-opacity"
         />
       </div>
 

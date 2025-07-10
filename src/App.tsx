@@ -14,6 +14,7 @@ import MyRequests from "./pages/MyRequests";
 import InviteUsers from "./pages/InviteUsers";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
+import Features from "./pages/Features";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -76,6 +77,14 @@ const App = () => (
                   <Layout>
                     <Settings />
                   </Layout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/features" 
+              element={
+                <ProtectedRoute>
+                  <Features />
                 </ProtectedRoute>
               } 
             />
