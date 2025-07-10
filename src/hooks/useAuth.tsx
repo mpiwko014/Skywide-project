@@ -118,11 +118,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: "You have been successfully signed out.",
       });
     } catch (error: any) {
-      toast({
-        title: "Sign Out Error",
-        description: "An error occurred while signing out.",
-        variant: "destructive",
-      });
+      // Handle 403 errors (session not found) as successful logout
+      if (error?.status === 403 || error?.message?.includes('session_not_found')) {
+        // Clear local session state even if server-side logout fails
+        setSession(null);
+        setUser(null);
+        toast({
+          title: "Signed Out",
+          description: "You have been successfully signed out.",
+        });
+      } else {
+        toast({
+          title: "Sign Out Error",
+          description: "An error occurred while signing out.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
