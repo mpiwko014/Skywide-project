@@ -69,7 +69,7 @@ export function Logo({ size = 'default', className = '', showSubtitle = true }: 
         </h1>
         {showSubtitle && (
           <p className={`text-sidebar-foreground/70 ${sizes[size].subtitle}`}>
-            POWERED BY SEOBRAND AI
+            POWERED BY SEOBRAND
           </p>
         )}
       </div>

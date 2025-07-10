@@ -100,6 +100,15 @@ export function Sidebar() {
         </ul>
       </nav>
 
+      {/* SEObrand Logo */}
+      <div className="p-4 flex justify-center">
+        <img 
+          src="/lovable-uploads/6c11bbb9-a412-4b9f-8bf5-4872a550e58e.png" 
+          alt="SEObrand" 
+          className="h-8 opacity-60 hover:opacity-80 transition-opacity"
+        />
+      </div>
+
       {/* Footer with Sign Out */}
       <div className="p-4 border-t border-sidebar-border">
         <Button
