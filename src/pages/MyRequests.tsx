@@ -57,36 +57,32 @@ export default function MyRequests() {
 
   const fetchRequests = async () => {
     try {
-      // First, fetch all content requests
-      const { data: requestsData, error: requestsError } = await supabase
-        .from('content_requests')
-        .select(`
-          id,
-          article_title,
-          title_audience,
-          seo_keywords,
-          client_name,
-          article_type,
-          creative_brief,
-          status,
-          webhook_sent,
-          created_at,
-          updated_at,
-          user_id
-        `)
-        .order('created_at', { ascending: false });
-      
-      if (requestsError) throw requestsError;
+      if (userRole === 'admin') {
+        // For admin users, fetch content requests with user profiles in a single query
+        const { data, error } = await supabase
+          .from('content_requests')
+          .select(`
+            id,
+            article_title,
+            title_audience,
+            seo_keywords,
+            client_name,
+            article_type,
+            creative_brief,
+            status,
+            webhook_sent,
+            created_at,
+            updated_at,
+            user_id
+          `)
+          .order('created_at', { ascending: false });
 
-      let requestsWithProfiles = requestsData || [];
+        if (error) throw error;
 
-      // If user is admin, fetch user profiles and merge with requests
-      if (userRole === 'admin' && requestsData && requestsData.length > 0) {
-        try {
-          // Get unique user IDs from requests
-          const userIds = [...new Set(requestsData.map(req => req.user_id))];
+        // If we have requests, fetch user profiles for them
+        if (data && data.length > 0) {
+          const userIds = [...new Set(data.map(req => req.user_id))];
           
-          // Fetch profiles for those users
           const { data: profilesData, error: profilesError } = await supabase
             .from('profiles')
             .select('id, full_name, email, role')
@@ -94,30 +90,54 @@ export default function MyRequests() {
 
           if (profilesError) {
             console.error('Error fetching profiles:', profilesError);
-            // Continue without profile data rather than failing completely
+            setRequests(data as ContentRequest[]);
           } else if (profilesData) {
-            // Create a map of user_id to profile for efficient lookup
+            // Create a map for efficient lookup
             const profilesMap = new Map(
               profilesData.map(profile => [profile.id, profile])
             );
 
             // Merge profile data with requests
-            requestsWithProfiles = requestsData.map(request => ({
+            const requestsWithProfiles: ContentRequest[] = data.map(request => ({
               ...request,
               profiles: profilesMap.get(request.user_id) ? {
-                full_name: profilesMap.get(request.user_id)!.full_name,
-                email: profilesMap.get(request.user_id)!.email,
-                role: profilesMap.get(request.user_id)!.role
+                full_name: profilesMap.get(request.user_id)!.full_name || '',
+                email: profilesMap.get(request.user_id)!.email || '',
+                role: profilesMap.get(request.user_id)!.role || 'user'
               } : undefined
             }));
-          }
-        } catch (profileErr) {
-          console.error('Error fetching user profiles:', profileErr);
-          // Continue with requests data only
-        }
-      }
 
-      setRequests(requestsWithProfiles as ContentRequest[]);
+            setRequests(requestsWithProfiles);
+          } else {
+            setRequests(data as ContentRequest[]);
+          }
+        } else {
+          setRequests([]);
+        }
+      } else {
+        // For regular users, only fetch their own requests
+        const { data: requestsData, error: requestsError } = await supabase
+          .from('content_requests')
+          .select(`
+            id,
+            article_title,
+            title_audience,
+            seo_keywords,
+            client_name,
+            article_type,
+            creative_brief,
+            status,
+            webhook_sent,
+            created_at,
+            updated_at,
+            user_id
+          `)
+          .eq('user_id', user?.id)
+          .order('created_at', { ascending: false });
+
+        if (requestsError) throw requestsError;
+        setRequests(requestsData || []);
+      }
     } catch (err: any) {
       console.error('Error fetching requests:', err);
       setError(err.message);
