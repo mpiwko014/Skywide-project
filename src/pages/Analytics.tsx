@@ -72,7 +72,7 @@ export default function Analytics() {
           .from('content_requests')
           .select(`
             *,
-            profiles:user_id (
+            profiles!content_requests_user_id_fkey (
               display_name,
               full_name,
               email
@@ -87,7 +87,7 @@ export default function Analytics() {
           .select(`
             user_id,
             created_at,
-            profiles:user_id (
+            profiles!content_requests_user_id_fkey (
               display_name,
               full_name
             )
@@ -189,6 +189,11 @@ export default function Analytics() {
         setDailySubmissions(dailySubmissionsArray);
       } catch (error) {
         console.error('Error fetching analytics:', error);
+        toast({
+          title: "Error loading analytics",
+          description: "Please try refreshing the page or contact support.",
+          variant: "destructive",
+        });
       } finally {
         setLoading(false);
       }
