@@ -120,6 +120,7 @@ export default function Login() {
               <button
                 type="button"
                 className="text-sm text-brand-cyan hover:text-brand-cyan/80"
+                onClick={() => navigate('/reset-password')}
               >
                 Forgot your password?
               </button>
