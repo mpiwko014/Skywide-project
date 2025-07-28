@@ -18,7 +18,7 @@ export default function ResetPassword() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
-  const { user, resetPassword, updatePassword } = useAuth();
+  const { user, resetPassword, updatePassword, isPasswordReset } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
@@ -34,12 +34,12 @@ export default function ResetPassword() {
     }
   }, [searchParams]);
 
-  // Redirect authenticated users to dashboard
+  // Redirect authenticated users to dashboard (but not during password reset)
   useEffect(() => {
-    if (user && step === 'request') {
+    if (user && step === 'request' && !isPasswordReset) {
       navigate('/dashboard');
     }
-  }, [user, navigate, step]);
+  }, [user, navigate, step, isPasswordReset]);
 
   const handleRequestReset = async (e: React.FormEvent) => {
     e.preventDefault();

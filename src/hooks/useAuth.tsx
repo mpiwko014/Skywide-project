@@ -7,6 +7,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  isPasswordReset: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, displayName?: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -20,22 +21,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isPasswordReset, setIsPasswordReset] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+        // Check if this is a password reset flow
+        const urlParams = new URLSearchParams(window.location.search);
+        const isResetFlow = urlParams.get('type') === 'recovery';
+        
+        if (isResetFlow && session) {
+          // Handle password reset - set session but don't treat as regular login
+          setSession(session);
+          setUser(null); // Don't set user to prevent auto-login behavior
+          setIsPasswordReset(true);
+        } else if (event === 'PASSWORD_RECOVERY') {
+          // Handle password recovery event
+          setSession(session);
+          setUser(null);
+          setIsPasswordReset(true);
+        } else {
+          // Regular authentication flow
+          setSession(session);
+          setUser(session?.user ?? null);
+          setIsPasswordReset(false);
+        }
         setLoading(false);
       }
     );
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+      const urlParams = new URLSearchParams(window.location.search);
+      const isResetFlow = urlParams.get('type') === 'recovery';
+      
+      if (isResetFlow && session) {
+        setSession(session);
+        setUser(null);
+        setIsPasswordReset(true);
+      } else {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setIsPasswordReset(false);
+      }
       setLoading(false);
     });
 
@@ -204,6 +234,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           variant: "destructive",
         });
       } else {
+        // Clear password reset state and establish proper session
+        setIsPasswordReset(false);
+        setUser(session?.user ?? null);
+        
         toast({
           title: "Password Updated",
           description: "Your password has been successfully updated.",
@@ -225,6 +259,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     session,
     loading,
+    isPasswordReset,
     signIn,
     signUp,
     signOut,
