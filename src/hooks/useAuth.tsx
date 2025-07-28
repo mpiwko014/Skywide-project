@@ -25,28 +25,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
+    // Check for existing password reset state
+    const storedResetState = sessionStorage.getItem('isPasswordReset');
+    if (storedResetState === 'true') {
+      setIsPasswordReset(true);
+    }
+
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         // Check if this is a password reset flow
         const urlParams = new URLSearchParams(window.location.search);
-        const isResetFlow = urlParams.get('type') === 'recovery';
+        const isResetFlow = urlParams.get('type') === 'recovery' || event === 'PASSWORD_RECOVERY';
         
         if (isResetFlow && session) {
           // Handle password reset - set session but don't treat as regular login
           setSession(session);
           setUser(null); // Don't set user to prevent auto-login behavior
           setIsPasswordReset(true);
-        } else if (event === 'PASSWORD_RECOVERY') {
-          // Handle password recovery event
-          setSession(session);
+          sessionStorage.setItem('isPasswordReset', 'true');
+        } else if (event === 'SIGNED_OUT') {
+          // Handle sign out
+          setSession(null);
           setUser(null);
-          setIsPasswordReset(true);
-        } else {
-          // Regular authentication flow
+          setIsPasswordReset(false);
+          sessionStorage.removeItem('isPasswordReset');
+        } else if (!isPasswordReset) {
+          // Regular authentication flow (only if not in password reset mode)
           setSession(session);
           setUser(session?.user ?? null);
-          setIsPasswordReset(false);
         }
         setLoading(false);
       }
@@ -56,12 +63,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       const urlParams = new URLSearchParams(window.location.search);
       const isResetFlow = urlParams.get('type') === 'recovery';
+      const storedResetState = sessionStorage.getItem('isPasswordReset') === 'true';
       
-      if (isResetFlow && session) {
+      if ((isResetFlow || storedResetState) && session) {
         setSession(session);
         setUser(null);
         setIsPasswordReset(true);
-      } else {
+        sessionStorage.setItem('isPasswordReset', 'true');
+      } else if (!storedResetState) {
         setSession(session);
         setUser(session?.user ?? null);
         setIsPasswordReset(false);
@@ -237,6 +246,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Clear password reset state and establish proper session
         setIsPasswordReset(false);
         setUser(session?.user ?? null);
+        sessionStorage.removeItem('isPasswordReset');
         
         toast({
           title: "Password Updated",
