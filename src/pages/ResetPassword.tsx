@@ -24,15 +24,22 @@ export default function ResetPassword() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if we have a password reset token in the URL
+    // Check if we're in password reset mode from auth context
+    if (isPasswordReset) {
+      setStep('reset');
+      return;
+    }
+
+    // Also check URL parameters as fallback
+    const type = searchParams.get('type');
     const accessToken = searchParams.get('access_token');
     const refreshToken = searchParams.get('refresh_token');
-    const type = searchParams.get('type');
     
-    if (accessToken && refreshToken && type === 'recovery') {
+    // Check for common Supabase reset URL patterns
+    if (type === 'recovery' || (accessToken && refreshToken)) {
       setStep('reset');
     }
-  }, [searchParams]);
+  }, [searchParams, isPasswordReset]);
 
   // Redirect authenticated users to dashboard (but not during password reset)
   useEffect(() => {
