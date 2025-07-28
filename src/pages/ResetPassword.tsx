@@ -58,7 +58,28 @@ export default function ResetPassword() {
     setIsLoading(true);
 
     try {
-      await resetPassword(email);
+      // Import the custom password reset service
+      const { sendCustomPasswordResetEmail } = await import("@/services/passwordResetService");
+      const { error } = await sendCustomPasswordResetEmail(email);
+      
+      if (error) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Check your email",
+          description: "We've sent you a password reset link from SKYWIDE.",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
