@@ -337,7 +337,7 @@ export default function MyRequests() {
                         <TableHead className="font-semibold text-foreground py-4 px-4">Type</TableHead>
                         <TableHead className="font-semibold text-foreground py-4 px-4">Status</TableHead>
                         <TableHead className="font-semibold text-foreground py-4 px-4">Submitted</TableHead>
-                        <TableHead className="font-semibold text-foreground py-4 px-4">Documents</TableHead>
+                        <TableHead className="font-semibold text-foreground py-4 px-4">View Docs</TableHead>
                         <TableHead className="font-semibold text-foreground py-4 px-4">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
