@@ -114,10 +114,20 @@ export default function Dashboard() {
         // Capture the response for Google Drive link
         if (response.ok) {
           try {
-            webhookResponseData = await response.text();
+            const jsonResponse = await response.json();
+            console.log('Webhook JSON response:', jsonResponse);
+            webhookResponseData = JSON.stringify(jsonResponse);
           } catch (e) {
-            console.error('Error reading webhook response:', e);
+            console.log('Webhook response is not JSON, trying text...');
+            try {
+              webhookResponseData = await response.text();
+              console.log('Webhook text response:', webhookResponseData);
+            } catch (textError) {
+              console.error('Error reading webhook response as text:', textError);
+            }
           }
+        } else {
+          console.error('Webhook request failed with status:', response.status);
         }
       } catch (webhookError) {
         console.error('Webhook failed:', webhookError);
