@@ -326,19 +326,19 @@ export default function MyRequests() {
               <CardHeader>
                 <CardTitle>Content Requests</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow>
-                        <TableHead>Article Title</TableHead>
-                        {userRole === 'admin' && <TableHead>User</TableHead>}
-                        <TableHead>Client</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Submitted</TableHead>
-                        <TableHead>Documents</TableHead>
-                        <TableHead>Actions</TableHead>
+                      <TableRow className="border-b border-border">
+                        <TableHead className="font-semibold text-foreground py-4 px-6">Article Title</TableHead>
+                        {userRole === 'admin' && <TableHead className="font-semibold text-foreground py-4 px-4">User</TableHead>}
+                        <TableHead className="font-semibold text-foreground py-4 px-4">Client</TableHead>
+                        <TableHead className="font-semibold text-foreground py-4 px-4">Type</TableHead>
+                        <TableHead className="font-semibold text-foreground py-4 px-4">Status</TableHead>
+                        <TableHead className="font-semibold text-foreground py-4 px-4">Submitted</TableHead>
+                        <TableHead className="font-semibold text-foreground py-4 px-4">Documents</TableHead>
+                        <TableHead className="font-semibold text-foreground py-4 px-4">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -346,10 +346,10 @@ export default function MyRequests() {
                         const googleDriveLink = getGoogleDriveLink(request.webhook_response);
                         
                         return (
-                          <TableRow key={request.id}>
-                            <TableCell>
+                          <TableRow key={request.id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                            <TableCell className="py-4 px-6">
                               <div className="max-w-xs">
-                                <p className="font-medium text-foreground truncate" title={request.article_title}>
+                                <p className="font-medium text-foreground truncate mb-1" title={request.article_title}>
                                   {request.article_title}
                                 </p>
                                 <p className="text-sm text-muted-foreground">
@@ -359,67 +359,67 @@ export default function MyRequests() {
                             </TableCell>
                             
                             {userRole === 'admin' && (
-                              <TableCell>
+                              <TableCell className="py-4 px-4">
                                 {request.profiles ? (
                                   <div>
-                                    <p className="text-sm font-medium">{request.profiles.full_name}</p>
+                                    <p className="text-sm font-medium text-foreground">{request.profiles.full_name}</p>
                                     <p className="text-xs text-muted-foreground">{request.profiles.email}</p>
                                   </div>
                                 ) : (
-                                  <span className="text-muted-foreground">-</span>
+                                  <span className="text-muted-foreground text-sm">-</span>
                                 )}
                               </TableCell>
                             )}
                             
-                            <TableCell>
-                              <span className="text-sm">{request.client_name}</span>
+                            <TableCell className="py-4 px-4">
+                              <span className="text-sm text-foreground font-medium">{request.client_name}</span>
                             </TableCell>
                             
-                            <TableCell>
-                              <Badge variant="outline" className="text-xs">
+                            <TableCell className="py-4 px-4">
+                              <Badge variant="outline" className="text-xs font-medium">
                                 {request.article_type}
                               </Badge>
                             </TableCell>
                             
-                            <TableCell>
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
+                            <TableCell className="py-4 px-4">
+                              <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
                                 {request.status.replace('_', ' ')}
                               </span>
                             </TableCell>
                             
-                            <TableCell>
+                            <TableCell className="py-4 px-4">
                               <div className="text-sm text-muted-foreground">
                                 {formatDate(request.created_at)}
                               </div>
                             </TableCell>
                             
-                            <TableCell>
+                            <TableCell className="py-4 px-4">
                               {googleDriveLink ? (
                                 <Button
-                                  variant="outline"
+                                  variant="default"
                                   size="sm"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     window.open(googleDriveLink, '_blank');
                                   }}
-                                  className="text-xs"
+                                  className="text-xs bg-primary text-primary-foreground hover:bg-primary/90"
                                 >
                                   <ExternalLink className="h-3 w-3 mr-1" />
-                                  View Documents
+                                  View Docs
                                 </Button>
                               ) : (
-                                <span className="text-xs text-muted-foreground">
+                                <div className="text-xs text-muted-foreground bg-muted/50 px-3 py-1 rounded">
                                   {request.webhook_sent ? 'Pending' : 'Processing'}
-                                </span>
+                                </div>
                               )}
                             </TableCell>
                             
-                            <TableCell>
+                            <TableCell className="py-4 px-4">
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => openDetailView(request)}
-                                className="text-xs"
+                                className="text-xs hover:bg-muted"
                               >
                                 <Eye className="h-3 w-3 mr-1" />
                                 Details
