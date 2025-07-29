@@ -89,6 +89,7 @@ export default function Dashboard() {
       }
 
       let webhookSuccess = false;
+      let webhookResponseData = null;
       
       // 2. Send to webhook (existing functionality)
       try {
@@ -109,16 +110,28 @@ export default function Dashboard() {
         });
 
         webhookSuccess = response.ok;
+        
+        // Capture the response for Google Drive link
+        if (response.ok) {
+          try {
+            webhookResponseData = await response.text();
+          } catch (e) {
+            console.error('Error reading webhook response:', e);
+          }
+        }
       } catch (webhookError) {
         console.error('Webhook failed:', webhookError);
         // Continue even if webhook fails - database save is primary
       }
 
-      // 3. Update database with webhook status
+      // 3. Update database with webhook status and response
       if (dbData && dbData[0]) {
         await supabase
           .from('content_requests')
-          .update({ webhook_sent: webhookSuccess })
+          .update({ 
+            webhook_sent: webhookSuccess,
+            webhook_response: webhookResponseData 
+          })
           .eq('id', dbData[0].id);
       }
 

@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Link } from 'react-router-dom';
-import { Eye, Clock, User } from 'lucide-react';
+import { Eye, Clock, User, ExternalLink } from 'lucide-react';
 
 interface ContentRequest {
   id: string;
@@ -21,6 +22,7 @@ interface ContentRequest {
   created_at: string;
   updated_at: string;
   webhook_sent: boolean | null;
+  webhook_response: string | null;
   user_id: string;
   profiles?: {
     full_name: string;
@@ -71,6 +73,7 @@ export default function MyRequests() {
             creative_brief,
             status,
             webhook_sent,
+            webhook_response,
             created_at,
             updated_at,
             user_id
@@ -128,6 +131,7 @@ export default function MyRequests() {
             creative_brief,
             status,
             webhook_sent,
+            webhook_response,
             created_at,
             updated_at,
             user_id
@@ -214,6 +218,21 @@ export default function MyRequests() {
 
   const truncateText = (text: string, maxLength: number = 100) => {
     return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
+  };
+
+  const getGoogleDriveLink = (webhookResponse: string | null): string | null => {
+    if (!webhookResponse) return null;
+    
+    try {
+      const parsed = JSON.parse(webhookResponse);
+      return parsed.google_drive_link || null;
+    } catch {
+      // If it's not JSON, check if it's a direct URL
+      if (webhookResponse.includes('drive.google.com')) {
+        return webhookResponse;
+      }
+      return null;
+    }
   };
 
   if (loading) {
@@ -303,76 +322,117 @@ export default function MyRequests() {
           </Card>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {requests.map((request) => (
-                <Card 
-                  key={request.id} 
-                  className="cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-primary/50 hover:scale-[1.02]"
-                  onClick={() => openDetailView(request)}
-                >
-                  <CardContent className="p-6">
-                    <div className="space-y-4">
-                      <div>
-                        <h3 className="text-lg font-semibold text-foreground mb-2 line-clamp-2">
-                          {request.article_title}
-                        </h3>
-                        {userRole === 'admin' && request.profiles && (
-                          <div className="flex items-center gap-2 mb-2">
-                            <User className="w-4 h-4 text-muted-foreground" />
-                            <span className="text-sm font-medium text-foreground">
-                              {request.profiles.full_name}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {request.profiles.email}
-                            </span>
-                            <Badge 
-                              variant={request.profiles.role === 'admin' ? 'default' : 'secondary'}
-                              className="text-xs"
-                            >
-                              {request.profiles.role}
-                            </Badge>
-                          </div>
-                        )}
-                        <p className="text-muted-foreground text-sm">
-                          {request.client_name}
-                        </p>
-                      </div>
-                      
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Badge variant="outline" className="text-xs">
-                          {request.article_type}
-                        </Badge>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
-                          {request.status.replace('_', ' ')}
-                        </span>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <p className="text-muted-foreground text-sm line-clamp-3">
-                          {truncateText(request.creative_brief)}
-                        </p>
+            <Card>
+              <CardHeader>
+                <CardTitle>Content Requests</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Article Title</TableHead>
+                        {userRole === 'admin' && <TableHead>User</TableHead>}
+                        <TableHead>Client</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Submitted</TableHead>
+                        <TableHead>Documents</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {requests.map((request) => {
+                        const googleDriveLink = getGoogleDriveLink(request.webhook_response);
                         
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Clock className="h-3 w-3" />
-                          {formatDate(request.created_at)}
-                        </div>
-                      </div>
-                      
-                      <div className="pt-2 border-t border-border">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-muted-foreground">
-                            {request.webhook_sent ? '✓ Processed' : '⏳ Processing'}
-                          </span>
-                          <Button variant="ghost" size="sm" className="h-6 px-2">
-                            <Eye className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                        return (
+                          <TableRow key={request.id}>
+                            <TableCell>
+                              <div className="max-w-xs">
+                                <p className="font-medium text-foreground truncate" title={request.article_title}>
+                                  {request.article_title}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                  {truncateText(request.creative_brief, 50)}
+                                </p>
+                              </div>
+                            </TableCell>
+                            
+                            {userRole === 'admin' && (
+                              <TableCell>
+                                {request.profiles ? (
+                                  <div>
+                                    <p className="text-sm font-medium">{request.profiles.full_name}</p>
+                                    <p className="text-xs text-muted-foreground">{request.profiles.email}</p>
+                                  </div>
+                                ) : (
+                                  <span className="text-muted-foreground">-</span>
+                                )}
+                              </TableCell>
+                            )}
+                            
+                            <TableCell>
+                              <span className="text-sm">{request.client_name}</span>
+                            </TableCell>
+                            
+                            <TableCell>
+                              <Badge variant="outline" className="text-xs">
+                                {request.article_type}
+                              </Badge>
+                            </TableCell>
+                            
+                            <TableCell>
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
+                                {request.status.replace('_', ' ')}
+                              </span>
+                            </TableCell>
+                            
+                            <TableCell>
+                              <div className="text-sm text-muted-foreground">
+                                {formatDate(request.created_at)}
+                              </div>
+                            </TableCell>
+                            
+                            <TableCell>
+                              {googleDriveLink ? (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    window.open(googleDriveLink, '_blank');
+                                  }}
+                                  className="text-xs"
+                                >
+                                  <ExternalLink className="h-3 w-3 mr-1" />
+                                  View Documents
+                                </Button>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">
+                                  {request.webhook_sent ? 'Pending' : 'Processing'}
+                                </span>
+                              )}
+                            </TableCell>
+                            
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => openDetailView(request)}
+                                className="text-xs"
+                              >
+                                <Eye className="h-3 w-3 mr-1" />
+                                Details
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Detail Modal */}
             <Dialog open={isDetailModalOpen} onOpenChange={setIsDetailModalOpen}>
@@ -414,6 +474,30 @@ export default function MyRequests() {
                       <div>
                         <label className="text-sm font-medium text-muted-foreground">Creative Brief</label>
                         <p className="text-foreground mt-1 whitespace-pre-wrap">{selectedRequest.creative_brief}</p>
+                      </div>
+                      
+                      {/* Google Drive Documents Section */}
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground">Documents</label>
+                        <div className="mt-1">
+                          {getGoogleDriveLink(selectedRequest.webhook_response) ? (
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                const link = getGoogleDriveLink(selectedRequest.webhook_response);
+                                if (link) window.open(link, '_blank');
+                              }}
+                              className="w-full sm:w-auto"
+                            >
+                              <ExternalLink className="h-4 w-4 mr-2" />
+                              View Google Drive Documents
+                            </Button>
+                          ) : (
+                            <p className="text-muted-foreground">
+                              {selectedRequest.webhook_sent ? 'Documents pending - please check back later' : 'Request is being processed'}
+                            </p>
+                          )}
+                        </div>
                       </div>
                       
                       {userRole === 'admin' && selectedRequest.profiles && (
