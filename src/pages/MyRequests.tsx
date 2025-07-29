@@ -225,7 +225,7 @@ export default function MyRequests() {
     
     try {
       const parsed = JSON.parse(webhookResponse);
-      return parsed.google_drive_link || null;
+      return parsed.gDriveLink || null;
     } catch {
       // If it's not JSON, check if it's a direct URL
       if (webhookResponse.includes('drive.google.com')) {
