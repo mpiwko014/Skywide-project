@@ -1,5 +1,5 @@
 import { useAuth } from '@/hooks/useAuth';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -7,8 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
-import { Eye, Clock, User, ExternalLink } from 'lucide-react';
+import { Eye, Clock, User, ExternalLink, Search } from 'lucide-react';
 
 interface ContentRequest {
   id: string;
@@ -44,6 +45,7 @@ export default function MyRequests() {
   const [error, setError] = useState<string | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<ContentRequest | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     if (user) {
@@ -235,6 +237,22 @@ export default function MyRequests() {
     }
   };
 
+  // Filter requests based on search term
+  const filteredRequests = useMemo(() => {
+    if (!searchTerm.trim()) return requests;
+    
+    const search = searchTerm.toLowerCase();
+    return requests.filter(request => 
+      request.article_title.toLowerCase().includes(search) ||
+      request.client_name.toLowerCase().includes(search) ||
+      request.article_type.toLowerCase().includes(search) ||
+      request.status.toLowerCase().includes(search) ||
+      request.creative_brief.toLowerCase().includes(search) ||
+      (userRole === 'admin' && request.profiles?.full_name?.toLowerCase().includes(search)) ||
+      (userRole === 'admin' && request.profiles?.email?.toLowerCase().includes(search))
+    );
+  }, [requests, searchTerm, userRole]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background p-8">
@@ -303,13 +321,32 @@ export default function MyRequests() {
             </h1>
             <p className="text-muted-foreground">
               {userRole === 'admin' 
-                ? `Viewing all ${requests.length} content requests from all users`
-                : `You have ${requests.length} submitted content requests`}
+                ? `Viewing ${filteredRequests.length} of ${requests.length} content requests`
+                : `You have ${filteredRequests.length} of ${requests.length} submitted content requests`}
             </p>
           </div>
         </div>
+
+        {/* Search functionality */}
+        <div className="mb-6">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search requests..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          {searchTerm && (
+            <p className="text-sm text-muted-foreground mt-2">
+              Found {filteredRequests.length} result{filteredRequests.length !== 1 ? 's' : ''} for "{searchTerm}"
+            </p>
+          )}
+        </div>
         
-        {requests.length === 0 ? (
+        {filteredRequests.length === 0 && requests.length === 0 ? (
           <Card>
             <CardContent className="text-center py-12">
               <p className="text-lg text-muted-foreground mb-4">
@@ -317,6 +354,20 @@ export default function MyRequests() {
               </p>
               <Button asChild>
                 <Link to="/dashboard">Submit your first request</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        ) : filteredRequests.length === 0 ? (
+          <Card>
+            <CardContent className="text-center py-12">
+              <p className="text-lg text-muted-foreground mb-4">
+                No requests found matching "{searchTerm}".
+              </p>
+              <Button 
+                variant="outline" 
+                onClick={() => setSearchTerm('')}
+              >
+                Clear search
               </Button>
             </CardContent>
           </Card>
@@ -342,7 +393,7 @@ export default function MyRequests() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {requests.map((request) => {
+                      {filteredRequests.map((request) => {
                         const googleDriveLink = getGoogleDriveLink(request.webhook_response);
                         
                         return (

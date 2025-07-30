@@ -136,13 +136,33 @@ export default function Dashboard() {
 
       // 3. Update database with webhook status and response
       if (dbData && dbData[0]) {
-        await supabase
+        console.log('Attempting to update database with:', {
+          id: dbData[0].id,
+          webhook_sent: webhookSuccess,
+          webhook_response: webhookResponseData,
+          user_id: user?.id,
+          userRole: user?.user_metadata?.role || 'unknown'
+        });
+
+        const { data: updateData, error: updateError } = await supabase
           .from('content_requests')
           .update({ 
             webhook_sent: webhookSuccess,
             webhook_response: webhookResponseData 
           })
-          .eq('id', dbData[0].id);
+          .eq('id', dbData[0].id)
+          .select();
+
+        if (updateError) {
+          console.error('Error updating webhook status:', updateError);
+          toast({
+            title: "Database Update Error", 
+            description: `Failed to update webhook status: ${updateError.message}`,
+            variant: "destructive",
+          });
+        } else {
+          console.log('Database update successful:', updateData);
+        }
       }
 
       toast({
