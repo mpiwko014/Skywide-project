@@ -94,7 +94,7 @@ export default function Index() {
               <img 
                 src="/lovable-uploads/abefa66b-a1f9-4c62-bc62-d9132351623e.png" 
                 alt="SEOBRAND Logo" 
-                className="h-8 opacity-90"
+                className="h-12 opacity-90"
               />
               <p className="text-muted-foreground text-sm">
                 For SEO Brand Team Member Only • Secure Authentication Required
