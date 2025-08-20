@@ -90,9 +90,16 @@ export default function Index() {
           </div>
 
           <div className="mt-12 pt-8 border-t border-border">
-            <p className="text-muted-foreground text-sm">
-              For SKYWIDE staff members only • Secure authentication required
-            </p>
+            <div className="flex flex-col items-center gap-3">
+              <img 
+                src="/lovable-uploads/abefa66b-a1f9-4c62-bc62-d9132351623e.png" 
+                alt="SEOBRAND Logo" 
+                className="h-8 opacity-90"
+              />
+              <p className="text-muted-foreground text-sm">
+                For SEO Brand Team Member Only • Secure Authentication Required
+              </p>
+            </div>
           </div>
         </div>
       </div>
