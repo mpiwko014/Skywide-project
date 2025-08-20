@@ -52,8 +52,8 @@ export default function Login() {
 
         <Card className="hover-glow animate-fade-in">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Welcome Back</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-2xl seobrand-title seobrand-title-accent">Welcome Back</CardTitle>
+            <CardDescription className="seobrand-description">
               Sign in to your SKYWIDE account
             </CardDescription>
           </CardHeader>
@@ -119,7 +119,7 @@ export default function Login() {
             <div className="mt-4 text-center">
               <button
                 type="button"
-                className="text-sm text-brand-cyan hover:text-brand-cyan/80"
+                className="text-sm text-brand-blue-crayola hover:text-brand-blue-crayola/80 transition-colors"
                 onClick={() => navigate('/reset-password')}
               >
                 Forgot your password?
@@ -132,10 +132,10 @@ export default function Login() {
         <Card className="mt-4 bg-muted/50 border-muted-foreground/20">
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
-              <Mail className="w-4 h-4 text-brand-cyan" />
-              <span className="text-sm font-medium text-foreground">Invitation Only</span>
+              <Mail className="w-4 h-4 text-brand-blue-crayola" />
+              <span className="text-sm font-medium seobrand-subtitle">Invitation Only</span>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs seobrand-description">
               Don't have an account? Contact your administrator to receive an invitation.
             </p>
           </CardContent>

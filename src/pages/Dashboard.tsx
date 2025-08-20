@@ -196,17 +196,17 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">
+          <h1 className="text-3xl font-bold seobrand-title seobrand-title-accent mb-4">
             Welcome to SKYWIDE Dashboard
           </h1>
-          <p className="text-muted-foreground">
+          <p className="seobrand-description">
             Hello {user?.email}, submit your content creation requests below.
           </p>
         </div>
         
-        <Card className="bg-card border-border">
+        <Card className="bg-card border-border hover-glow">
           <CardHeader>
-            <CardTitle className="text-foreground">Content Submission Form</CardTitle>
+            <CardTitle className="seobrand-subtitle">Content Submission Form</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -316,7 +316,7 @@ export default function Dashboard() {
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 hover-glow"
+                className="w-full bg-brand-blue-crayola text-white hover:bg-brand-blue-crayola/90 hover-glow transition-all duration-300"
               >
                 {isSubmitting ? (
                   <>

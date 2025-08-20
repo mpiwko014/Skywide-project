@@ -66,8 +66,17 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// SKYWIDE brand colors
+				// SEOBRAND brand colors
 				brand: {
+					'blue-crayola': 'hsl(var(--brand-blue-crayola))',
+					'prussian-blue': 'hsl(var(--brand-prussian-blue))',
+					'sun-glow': 'hsl(var(--brand-sun-glow))',
+					'rich-black': 'hsl(var(--brand-rich-black))',
+					'ghost-white': 'hsl(var(--brand-ghost-white))',
+					'davys-grey': 'hsl(var(--brand-davys-grey))',
+					'davys-grey-light': 'hsl(var(--brand-davys-grey-light))',
+					'davys-grey-lighter': 'hsl(var(--brand-davys-grey-lighter))',
+					// Legacy SKYWIDE colors
 					cyan: 'hsl(var(--brand-cyan))',
 					blue: 'hsl(var(--brand-blue))',
 					indigo: 'hsl(var(--brand-indigo))',
