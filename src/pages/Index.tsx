@@ -81,7 +81,7 @@ export default function Index() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in">
             <Button 
               size="lg" 
-              className="hover-glow text-lg px-8 py-6"
+              className="bg-brand-blue-crayola hover:bg-brand-blue-crayola/90 text-white hover-glow text-lg px-8 py-6 transition-colors"
               onClick={() => navigate('/login')}
             >
               <LogIn className="mr-2 h-5 w-5" />
