@@ -453,7 +453,7 @@ export default function MyRequests() {
                                     e.stopPropagation();
                                     window.open(googleDriveLink, '_blank');
                                   }}
-                                  className="text-xs bg-primary text-primary-foreground hover:bg-primary/90"
+                                  className="text-xs bg-brand-blue-crayola text-white hover:bg-brand-blue-crayola/90 transition-colors"
                                 >
                                   <ExternalLink className="h-3 w-3 mr-1" />
                                   View Docs
