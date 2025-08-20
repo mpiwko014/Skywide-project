@@ -106,12 +106,15 @@ export function Sidebar({ userRole, loading }: SidebarProps) {
       </nav>
 
       {/* SEObrand Logo */}
-      <div className="p-4 flex justify-center">
+      <div className="p-4 flex flex-col items-center">
         <img 
-          src="/lovable-uploads/6c11bbb9-a412-4b9f-8bf5-4872a550e58e.png" 
+          src="/lovable-uploads/ae19eee1-57bc-4b76-865e-f89a663021a9.png" 
           alt="SEObrand" 
           className="h-12 opacity-60 hover:opacity-80 transition-opacity"
         />
+        <p className="text-xs text-sidebar-foreground/60 mt-2 text-center">
+          For SEO Brand Staff Members Only
+        </p>
       </div>
 
       {/* Footer with Sign Out */}
