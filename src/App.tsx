@@ -16,6 +16,7 @@ import InviteUsers from "./pages/InviteUsers";
 import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import Features from "./pages/Features";
+import Research from "./pages/Research";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -88,6 +89,16 @@ const App = () => (
                 <ProtectedRoute>
                   <Layout>
                     <Features />
+                  </Layout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/research" 
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Research />
                   </Layout>
                 </ProtectedRoute>
               } 

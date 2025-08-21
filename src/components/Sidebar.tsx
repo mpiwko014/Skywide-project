@@ -1,4 +1,4 @@
-import { Home, FileText, BarChart, Settings, LogOut, Users, MessageSquare } from 'lucide-react';
+import { Home, FileText, BarChart, Settings, LogOut, Users, MessageSquare, Search } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ const navItems = [
   { icon: Home, label: 'Dashboard', path: '/dashboard' },
   { icon: FileText, label: 'My Requests', path: '/my-requests' },
   { icon: MessageSquare, label: 'Features', path: '/features' },
+  { icon: Search, label: 'Research', path: '/research' },
   { icon: Settings, label: 'Settings', path: '/settings' },
 ];
 
@@ -15,6 +16,7 @@ const adminNavItems = [
   { icon: Home, label: 'Dashboard', path: '/dashboard' },
   { icon: FileText, label: 'My Requests', path: '/my-requests' },
   { icon: MessageSquare, label: 'Features', path: '/features' },
+  { icon: Search, label: 'Research', path: '/research' },
   { icon: Users, label: 'Invite Users', path: '/invite-users' },
   { icon: BarChart, label: 'Analytics', path: '/analytics' },
   { icon: Settings, label: 'Settings', path: '/settings' },
