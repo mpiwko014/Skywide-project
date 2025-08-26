@@ -229,7 +229,7 @@ export default function Dashboard() {
 
                 <div className="space-y-2">
                   <Label htmlFor="titleAudience" className="text-foreground">
-                    Title Audience *
+                    Target Audience *
                   </Label>
                   <Input
                     id="titleAudience"
