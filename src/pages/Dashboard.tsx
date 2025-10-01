@@ -17,6 +17,7 @@ interface FormData {
   clientName: string;
   creativeBrief: string;
   articleType: string;
+  wordCount: string;
 }
 
 export default function Dashboard() {
@@ -30,6 +31,7 @@ export default function Dashboard() {
     clientName: '',
     creativeBrief: '',
     articleType: '',
+    wordCount: '',
   });
   const [errors, setErrors] = useState<Partial<FormData>>({});
 
@@ -42,6 +44,7 @@ export default function Dashboard() {
     if (!formData.clientName.trim()) newErrors.clientName = 'Client Name is required';
     if (!formData.creativeBrief.trim()) newErrors.creativeBrief = 'Creative Brief is required';
     if (!formData.articleType) newErrors.articleType = 'Article Type is required';
+    if (!formData.wordCount.trim()) newErrors.wordCount = 'Word Count is required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -105,6 +108,7 @@ export default function Dashboard() {
             articleType: formData.articleType,
             clientName: formData.clientName,
             creativeBrief: formData.creativeBrief,
+            wordCount: formData.wordCount,
             requestId: dbData[0].id,
           }),
         });
@@ -178,6 +182,7 @@ export default function Dashboard() {
         clientName: '',
         creativeBrief: '',
         articleType: '',
+        wordCount: '',
       });
 
     } catch (error) {
@@ -293,6 +298,22 @@ export default function Dashboard() {
                   </Select>
                   {errors.articleType && (
                     <p className="text-sm text-destructive">{errors.articleType}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="wordCount" className="text-foreground">
+                    Word Count *
+                  </Label>
+                  <Input
+                    id="wordCount"
+                    value={formData.wordCount}
+                    onChange={(e) => handleInputChange('wordCount', e.target.value)}
+                    className={`bg-background border-input ${errors.wordCount ? 'border-destructive' : ''}`}
+                    placeholder="Enter word count"
+                  />
+                  {errors.wordCount && (
+                    <p className="text-sm text-destructive">{errors.wordCount}</p>
                   )}
                 </div>
               </div>
