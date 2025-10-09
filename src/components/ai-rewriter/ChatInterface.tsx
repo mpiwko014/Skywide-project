@@ -18,6 +18,7 @@ interface ChatInterfaceProps {
   isStreaming: boolean;
   streamingContent: string;
   showFileUpload: boolean;
+  documentJustLoaded: boolean;
   loading?: boolean;
 }
 
@@ -31,6 +32,7 @@ export function ChatInterface({
   isStreaming,
   streamingContent,
   showFileUpload,
+  documentJustLoaded,
   loading,
 }: ChatInterfaceProps) {
   const [input, setInput] = useState('');
@@ -99,9 +101,26 @@ export function ChatInterface({
               </div>
             )}
 
-            {messages.length === 0 && !showFileUpload && (
+            {messages.length === 0 && !showFileUpload && !documentJustLoaded && (
               <div className="text-center py-8 text-muted-foreground">
                 Type a message to start the conversation
+              </div>
+            )}
+
+            {documentJustLoaded && messages.length === 0 && (
+              <div className="text-center py-8 px-4">
+                <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-3 rounded-lg mb-4">
+                  <span className="text-lg">✓</span>
+                  <span className="font-medium">Document loaded: {documentName}</span>
+                </div>
+                <p className="text-muted-foreground">
+                  Now tell me what you'd like me to do with it. For example:
+                </p>
+                <ul className="text-sm text-muted-foreground mt-2 space-y-1">
+                  <li>• "Make this more professional and concise"</li>
+                  <li>• "Rewrite this in a casual tone"</li>
+                  <li>• "Summarize the key points"</li>
+                </ul>
               </div>
             )}
 

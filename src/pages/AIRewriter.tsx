@@ -24,6 +24,7 @@ export default function AIRewriter() {
   const [loading, setLoading] = useState(false);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [showFileUpload, setShowFileUpload] = useState(false);
+  const [documentJustLoaded, setDocumentJustLoaded] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -85,6 +86,7 @@ export default function AIRewriter() {
   const handleSelectConversation = (id: string) => {
     setCurrentConversationId(id);
     setShowFileUpload(false);
+    setDocumentJustLoaded(false);
   };
 
   const handleDeleteConversation = async (id: string) => {
@@ -122,13 +124,8 @@ export default function AIRewriter() {
         }
 
         setShowFileUpload(false);
-        toast.success('Document uploaded successfully', { id: 'upload' });
-        
-        // Send initial system message
-        await handleSendMessage(
-          `I have loaded your document: "${result.fileName}". How would you like me to help you rewrite it?`,
-          'gpt-5-2025-08-07'
-        );
+        setDocumentJustLoaded(true);
+        toast.success(`Document "${result.fileName}" loaded successfully. Now tell me what you'd like me to do with it.`, { id: 'upload' });
       }
     } catch (error) {
       console.error('Upload error:', error);
@@ -141,6 +138,7 @@ export default function AIRewriter() {
 
     setIsStreaming(true);
     setStreamingContent('');
+    setDocumentJustLoaded(false);
 
     await streamChat(
       currentConversationId,
@@ -184,6 +182,7 @@ export default function AIRewriter() {
         isStreaming={isStreaming}
         streamingContent={streamingContent}
         showFileUpload={showFileUpload}
+        documentJustLoaded={documentJustLoaded}
         loading={messagesLoading}
       />
     </div>
