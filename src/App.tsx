@@ -17,6 +17,7 @@ import Analytics from "./pages/Analytics";
 import Settings from "./pages/Settings";
 import Features from "./pages/Features";
 import Research from "./pages/Research";
+import AIRewriter from "./pages/AIRewriter";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -99,6 +100,16 @@ const App = () => (
                 <ProtectedRoute>
                   <Layout>
                     <Research />
+                  </Layout>
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/ai-rewriter" 
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <AIRewriter />
                   </Layout>
                 </ProtectedRoute>
               } 
