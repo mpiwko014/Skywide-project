@@ -15,7 +15,10 @@ serve(async (req) => {
   try {
     const { conversationId, message, model = 'gpt-5-2025-08-07' } = await req.json();
     
+    console.log('AI Rewrite Chat function called:', { conversationId, model, messageLength: message?.length });
+    
     if (!conversationId || !message) {
+      console.error('Missing required parameters:', { conversationId: !!conversationId, message: !!message });
       return new Response(JSON.stringify({ error: 'Missing conversationId or message' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -66,6 +69,13 @@ serve(async (req) => {
 
     const { data: conversation, error: convError } = conversationResult;
     const { data: messages, error: msgError } = messagesResult;
+
+    console.log('Conversation fetched:', { 
+      found: !!conversation, 
+      hasDocument: !!conversation?.document_content,
+      documentName: conversation?.document_name,
+      messageCount: messages?.length || 0
+    });
 
     if (convError || !conversation) {
       console.error('Conversation fetch error:', convError);
@@ -126,7 +136,11 @@ serve(async (req) => {
 
     if (userMsgError) {
       console.error('Failed to save user message:', userMsgError);
+    } else {
+      console.log('User message saved to database');
     }
+
+    console.log('Calling OpenAI API:', { model, messageCount: openAIMessages.length });
 
     // Call OpenAI API with streaming
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -145,7 +159,7 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenAI API error:', response.status, errorText);
+      console.error('OpenAI API error:', { status: response.status, error: errorText });
       
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }), {
@@ -167,6 +181,8 @@ serve(async (req) => {
       });
     }
 
+    console.log('Starting stream to client');
+
     // Pass OpenAI stream directly to client with background message saving
     const reader = response.body?.getReader();
     const decoder = new TextDecoder();
@@ -176,6 +192,7 @@ serve(async (req) => {
     const stream = new ReadableStream({
       async start(controller) {
         if (!reader) {
+          console.error('No reader available');
           controller.close();
           return;
         }
@@ -206,7 +223,11 @@ serve(async (req) => {
             }
           }
 
+          // Send [DONE] signal before closing
+          controller.enqueue(encoder.encode('data: [DONE]\n\n'));
           controller.close();
+
+          console.log('Stream completed, response length:', fullResponse.length);
 
           // Save assistant response in background (non-blocking)
           if (fullResponse) {
@@ -218,7 +239,11 @@ serve(async (req) => {
                 content: fullResponse
               })
               .then(({ error }) => {
-                if (error) console.error('Failed to save assistant message:', error);
+                if (error) {
+                  console.error('Failed to save assistant message:', error);
+                } else {
+                  console.log('Assistant message saved to database');
+                }
               });
           }
         } catch (error) {
