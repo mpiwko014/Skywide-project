@@ -13,6 +13,7 @@ import {
 } from '@/services/aiRewriterService';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function AIRewriter() {
   const { user } = useAuth();
@@ -115,7 +116,20 @@ export default function AIRewriter() {
       const result = await uploadDocument(file);
       
       if (result) {
-        // Update conversation with document
+        // Update database with document
+        const { error: updateError } = await supabase
+          .from('ai_conversations')
+          .update({
+            document_name: result.fileName,
+            document_content: result.text
+          })
+          .eq('id', currentConversationId);
+
+        if (updateError) {
+          throw new Error('Failed to save document to database');
+        }
+
+        // Update local state
         const conversation = conversations.find((c) => c.id === currentConversationId);
         if (conversation) {
           conversation.document_name = result.fileName;

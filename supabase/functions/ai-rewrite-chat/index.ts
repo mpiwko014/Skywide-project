@@ -49,13 +49,23 @@ serve(async (req) => {
       });
     }
 
-    // Fetch conversation and verify ownership
-    const { data: conversation, error: convError } = await supabase
-      .from('ai_conversations')
-      .select('*')
-      .eq('id', conversationId)
-      .eq('user_id', user.id)
-      .single();
+    // Fetch conversation and messages in parallel
+    const [conversationResult, messagesResult] = await Promise.all([
+      supabase
+        .from('ai_conversations')
+        .select('*')
+        .eq('id', conversationId)
+        .eq('user_id', user.id)
+        .single(),
+      supabase
+        .from('ai_messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true })
+    ]);
+
+    const { data: conversation, error: convError } = conversationResult;
+    const { data: messages, error: msgError } = messagesResult;
 
     if (convError || !conversation) {
       console.error('Conversation fetch error:', convError);
@@ -64,13 +74,6 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-
-    // Fetch conversation history
-    const { data: messages, error: msgError } = await supabase
-      .from('ai_messages')
-      .select('*')
-      .eq('conversation_id', conversationId)
-      .order('created_at', { ascending: true });
 
     if (msgError) {
       console.error('Messages fetch error:', msgError);
@@ -164,10 +167,10 @@ serve(async (req) => {
       });
     }
 
-    // Stream response back to client and collect full response
+    // Pass OpenAI stream directly to client with background message saving
     const reader = response.body?.getReader();
-    const encoder = new TextEncoder();
     const decoder = new TextDecoder();
+    const encoder = new TextEncoder();
     let fullResponse = '';
 
     const stream = new ReadableStream({
@@ -182,41 +185,42 @@ serve(async (req) => {
             const { done, value } = await reader.read();
             if (done) break;
 
+            // Pass through directly to client
+            controller.enqueue(value);
+
+            // Collect response for database saving
             const chunk = decoder.decode(value);
             const lines = chunk.split('\n').filter(line => line.trim() !== '');
-
             for (const line of lines) {
               if (line.startsWith('data: ')) {
                 const data = line.slice(6);
                 if (data === '[DONE]') continue;
-
                 try {
                   const parsed = JSON.parse(data);
                   const content = parsed.choices?.[0]?.delta?.content;
-                  if (content) {
-                    fullResponse += content;
-                    controller.enqueue(encoder.encode(`data: ${data}\n\n`));
-                  }
+                  if (content) fullResponse += content;
                 } catch (e) {
-                  console.error('Parse error:', e);
+                  // Ignore parse errors
                 }
               }
             }
           }
 
-          // Save assistant response to database
+          controller.close();
+
+          // Save assistant response in background (non-blocking)
           if (fullResponse) {
-            await supabase
+            supabase
               .from('ai_messages')
               .insert({
                 conversation_id: conversationId,
                 role: 'assistant',
                 content: fullResponse
+              })
+              .then(({ error }) => {
+                if (error) console.error('Failed to save assistant message:', error);
               });
           }
-
-          controller.enqueue(encoder.encode('data: [DONE]\n\n'));
-          controller.close();
         } catch (error) {
           console.error('Stream error:', error);
           controller.error(error);
