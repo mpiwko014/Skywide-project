@@ -23,6 +23,26 @@ const models = [
     label: 'GPT-5 Nano',
     description: 'Fastest and cheapest, good for simple tasks',
   },
+  {
+    value: 'gpt-4.1-2025-04-14',
+    label: 'GPT-4.1',
+    description: 'Flagship GPT-4 model for reliable results',
+  },
+  {
+    value: 'gpt-4.1-mini-2025-04-14',
+    label: 'GPT-4.1 Mini',
+    description: 'Balanced performance and cost',
+  },
+  {
+    value: 'gpt-4o',
+    label: 'GPT-4o',
+    description: 'Powerful multimodal model (legacy)',
+  },
+  {
+    value: 'gpt-4o-mini',
+    label: 'GPT-4o Mini',
+    description: 'Fast and affordable (legacy)',
+  },
 ];
 
 export function ModelSelector({ value, onChange, disabled }: ModelSelectorProps) {
