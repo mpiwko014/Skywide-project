@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { Logo } from '@/components/Logo';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function ResetPassword() {
   const [step, setStep] = useState<'request' | 'reset'>('request');
@@ -30,16 +31,30 @@ export default function ResetPassword() {
       return;
     }
 
-    // Also check URL parameters as fallback
+    // Exchange recovery code for session
     const type = searchParams.get('type');
-    const accessToken = searchParams.get('access_token');
-    const refreshToken = searchParams.get('refresh_token');
+    const code = searchParams.get('code');
     
-    // Check for common Supabase reset URL patterns
-    if (type === 'recovery' || (accessToken && refreshToken)) {
-      setStep('reset');
+    if (type === 'recovery' && code) {
+      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+        if (!error) {
+          setStep('reset');
+          // Clean URL
+          const url = new URL(window.location.href);
+          url.searchParams.delete('code');
+          url.searchParams.delete('type');
+          window.history.replaceState({}, '', url.toString());
+        } else {
+          console.error('Failed to exchange code:', error);
+          toast({
+            title: "Error",
+            description: "Invalid or expired reset link. Please request a new one.",
+            variant: "destructive",
+          });
+        }
+      });
     }
-  }, [searchParams, isPasswordReset]);
+  }, [searchParams, isPasswordReset, toast]);
 
   // Redirect authenticated users to dashboard (but not during password reset)
   useEffect(() => {

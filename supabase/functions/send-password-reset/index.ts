@@ -1,7 +1,20 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.3";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+
+// Create Supabase admin client for generating recovery links
+const supabaseAdmin = createClient(
+  Deno.env.get("SUPABASE_URL") ?? "",
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  }
+);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -26,8 +39,25 @@ const handler = async (req: Request): Promise<Response> => {
     const { email, resetUrl, userFullName }: PasswordResetRequest = await req.json();
     console.log("Sending password reset email to:", email);
 
+    // Generate proper Supabase recovery link
+    const { data, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'recovery',
+      email,
+      options: {
+        redirectTo: resetUrl,
+      },
+    });
+
+    if (linkError) {
+      console.error("Failed to generate recovery link:", linkError);
+      throw linkError;
+    }
+
+    const recoveryLink = data.properties.action_link;
+    console.log("Generated recovery link for:", email);
+
     const emailResponse = await resend.emails.send({
-      from: "SKYWIDE <passwordresett@skywide.co.uk>",
+      from: "SKYWIDE <passwordreset@skywide.co>",
       to: [email],
       subject: "Reset Your SKYWIDE Password",
       html: `
@@ -59,7 +89,7 @@ const handler = async (req: Request): Promise<Response> => {
 
               <!-- CTA Button -->
               <div style="margin: 32px 0;">
-                <a href="${resetUrl}" 
+                <a href="${recoveryLink}"
                    style="display: inline-block; background: linear-gradient(135deg, #06b6d4, #0891b2); color: #ffffff; text-decoration: none; padding: 16px 32px; border-radius: 8px; font-weight: 600; font-size: 16px; border: none; cursor: pointer;">
                   Reset Password
                 </a>
