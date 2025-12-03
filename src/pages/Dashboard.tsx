@@ -18,6 +18,10 @@ interface FormData {
   creativeBrief: string;
   articleType: string;
   wordCount: string;
+  primaryKeyword: string;
+  secondaryKeyword: string;
+  semanticTheme: string;
+  tone: string;
 }
 
 export default function Dashboard() {
@@ -32,6 +36,10 @@ export default function Dashboard() {
     creativeBrief: '',
     articleType: '',
     wordCount: '',
+    primaryKeyword: '',
+    secondaryKeyword: '',
+    semanticTheme: '',
+    tone: ''
   });
   const [errors, setErrors] = useState<Partial<FormData>>({});
 
@@ -45,6 +53,10 @@ export default function Dashboard() {
     if (!formData.creativeBrief.trim()) newErrors.creativeBrief = 'Creative Brief is required';
     if (!formData.articleType) newErrors.articleType = 'Article Type is required';
     if (!formData.wordCount.trim()) newErrors.wordCount = 'Word Count is required';
+    if (!formData.primaryKeyword.trim()) newErrors.primaryKeyword = 'Primary Keyword is required';
+    if (!formData.secondaryKeyword.trim()) newErrors.secondaryKeyword = 'Secondary Keyword is required';
+    if (!formData.semanticTheme.trim()) newErrors.semanticTheme = 'Semantic Theme is required';
+    if (!formData.tone.trim()) newErrors.tone = 'Tone is required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -183,6 +195,10 @@ export default function Dashboard() {
         creativeBrief: '',
         articleType: '',
         wordCount: '',
+        primaryKeyword: '',
+        secondaryKeyword: '',
+        semanticTheme: '',
+        tone: ''
       });
 
     } catch (error) {
@@ -316,6 +332,71 @@ export default function Dashboard() {
                     <p className="text-sm text-destructive">{errors.wordCount}</p>
                   )}
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="primaryKeyword" className="text-foreground">
+                    Primary Keyword *
+                  </Label>
+                  <Input
+                    id="primaryKeyword"
+                    value={formData.primaryKeyword}
+                    onChange={(e) => handleInputChange('primaryKeyword', e.target.value)}
+                    className={`bg-background border-input ${errors.primaryKeyword ? 'border-destructive' : ''}`}
+                    placeholder="Enter primary keyword"
+                  />
+                  {errors.primaryKeyword && (
+                    <p className="text-sm text-destructive">{errors.primaryKeyword}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="secondaryKeyword" className="text-foreground">
+                    Secondary Keyword *
+                  </Label>
+                  <Input
+                    id="secondaryKeyword"
+                    value={formData.secondaryKeyword}
+                    onChange={(e) => handleInputChange('secondaryKeyword', e.target.value)}
+                    className={`bg-background border-input ${errors.secondaryKeyword ? 'border-destructive' : ''}`}
+                    placeholder="Enter secondary keyword"
+                  />
+                  {errors.secondaryKeyword && (
+                    <p className="text-sm text-destructive">{errors.secondaryKeyword}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="semanticTheme" className="text-foreground">
+                    Semantic Theme *
+                  </Label>
+                  <Input
+                    id="semanticTheme"
+                    value={formData.semanticTheme}
+                    onChange={(e) => handleInputChange('semanticTheme', e.target.value)}
+                    className={`bg-background border-input ${errors.semanticTheme ? 'border-destructive' : ''}`}
+                    placeholder="Enter semantic theme"
+                  />
+                  {errors.semanticTheme && (
+                    <p className="text-sm text-destructive">{errors.semanticTheme}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="tone" className="text-foreground">
+                    Tone *
+                  </Label>
+                  <Input
+                    id="tone"
+                    value={formData.tone}
+                    onChange={(e) => handleInputChange('tone', e.target.value)}
+                    className={`bg-background border-input ${errors.tone ? 'border-destructive' : ''}`}
+                    placeholder="Enter tone"
+                  />
+                  {errors.tone && (
+                    <p className="text-sm text-destructive">{errors.tone}</p>
+                  )}
+                </div>
+
               </div>
 
               <div className="space-y-2">
